@@ -22,6 +22,21 @@
 14. Host app
 
 ## Three representative prompts
+```
+# Frontend component to upload csv
+
+Build a frontend file upload component on the Next.js main page.
+
+Requirements:
+1. Accept only `.csv` files.
+2. Store the selected file in React state without processing or uploading it.
+3. Display the selected filename.
+4. Add a button labeled **Validate** directly below the file input.
+5. Disable the Validate button when no valid file is selected.
+6. Keep the component simple, readable, and reusable, using TypeScript and Tailwind CSS.
+
+Do not implement validation logic, a backend, or any additional features. Do not modify unrelated files.
+```
 
 ## Rejected suggestions and why
 
