@@ -3,10 +3,36 @@
 import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { FaCloudArrowUp, FaFileCsv, FaXmark } from "react-icons/fa6";
 
-type CsvUploadProps = {
-  /** Called with the selected file when Validate is clicked and its columns are correct. */
-  onValidate?: (file: File) => void;
-};
+/** Where the Go backend runs. Override with NEXT_PUBLIC_API_URL. */
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+
+/** Progress of the backend validation, shown below the Validate button. */
+type BackendStatus =
+  | { state: "idle" }
+  | { state: "loading" }
+  | { state: "success"; rowCount: number }
+  | { state: "error"; message: string };
+
+/** Sends the file to the backend and returns the number of data rows it read. */
+async function validateOnBackend(file: File): Promise<number> {
+  const body = new FormData();
+  body.append("file", file);
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/api/validate`, { method: "POST", body });
+  } catch {
+    throw new Error("Could not reach the backend. Is it running?");
+  }
+
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !result) {
+    throw new Error(
+      result?.error ?? `The backend returned an error (${response.status}).`,
+    );
+  }
+  return result.row_count;
+}
 
 /**
  * Parses text as comma-separated values and reports whether it is well formed:
@@ -132,9 +158,11 @@ function parseHeaderRow(text: string): string[] {
   return titles;
 }
 
-export default function CsvUpload({ onValidate }: CsvUploadProps) {
+export default function CsvUpload() {
   // Only one file at a time: selecting is only possible while this is null.
   const [file, setFile] = useState<File | null>(null);
+  const [status, setStatus] = useState<BackendStatus>({ state: "idle" });
+  const loading = status.state === "loading";
 
   // Messages are shown in a dialog rather than alert(), which cannot format text.
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -152,6 +180,7 @@ export default function CsvUpload({ onValidate }: CsvUploadProps) {
 
     if (await isCsv(selected)) {
       setFile(selected);
+      setStatus({ state: "idle" });
     } else {
       input.value = ""; // allow picking the same file again
       showMessage(<p>The file uploaded cannot be read as a .csv file!</p>);
@@ -159,7 +188,8 @@ export default function CsvUpload({ onValidate }: CsvUploadProps) {
   }
 
   async function handleValidate() {
-    if (!file) return;
+    if (!file || loading) return;
+    setStatus({ state: "idle" });
 
     // The header row is at the start, so there is no need to read the whole file.
     const titles = parseHeaderRow(await file.slice(0, 64 * 1024).text());
@@ -207,7 +237,19 @@ export default function CsvUpload({ onValidate }: CsvUploadProps) {
       return;
     }
 
-    onValidate?.(file);
+    setStatus({ state: "loading" });
+    try {
+      const rowCount = await validateOnBackend(file);
+      setStatus({ state: "success", rowCount });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setStatus({ state: "error", message });
+    }
+  }
+
+  function handleRemove() {
+    setFile(null);
+    setStatus({ state: "idle" });
   }
 
   return (
@@ -217,9 +259,10 @@ export default function CsvUpload({ onValidate }: CsvUploadProps) {
           <div className="relative flex max-w-full flex-col items-center gap-3 px-8 pt-6">
             <button
               type="button"
-              onClick={() => setFile(null)}
+              onClick={handleRemove}
+              disabled={loading}
               aria-label={`Remove ${file.name}`}
-              className="absolute right-0 top-0 flex size-7 cursor-pointer items-center justify-center rounded-full bg-foreground text-background transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="absolute right-0 top-0 flex size-7 cursor-pointer items-center justify-center rounded-full bg-foreground text-background transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
             >
               <FaXmark className="size-4" aria-hidden />
             </button>
@@ -247,12 +290,29 @@ export default function CsvUpload({ onValidate }: CsvUploadProps) {
 
       <button
         type="button"
-        disabled={!file}
+        disabled={!file || loading}
         onClick={handleValidate}
         className="rounded-full bg-primary px-6 py-4 text-lg font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-primary"
       >
         Validate
       </button>
+
+      {/* Collapses when empty so the idle layout is unchanged. */}
+      <p className="text-center text-sm empty:hidden" aria-live="polite">
+        {status.state === "loading" && (
+          <span className="text-muted">
+            Doing further validations on the backend...
+          </span>
+        )}
+        {status.state === "success" && (
+          <span className="font-medium text-accent">
+            File has been validated successfully! {status.rowCount} rows read!
+          </span>
+        )}
+        {status.state === "error" && (
+          <span className="font-medium text-red-700">{status.message}</span>
+        )}
+      </p>
 
       <dialog
         ref={dialogRef}

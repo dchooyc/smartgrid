@@ -38,6 +38,49 @@ Requirements:
 Do not implement validation logic, a backend, or any additional features. Do not modify unrelated files.
 ```
 
+```
+# Backend to receive .csv from frontend
+
+Create a minimal Go backend (as a folder named backend outside of frontend) and connect it to the existing Next.js CSV upload component.
+
+### Backend
+
+1. Use Go's standard library (`net/http` and `encoding/csv`). Keep the code extremely simple, clean, and readable.
+2. Create a `POST /api/validate` endpoint that receives the CSV file using `multipart/form-data`.
+3. Read the CSV in memory without saving it.
+4. Verify that the file contains exactly these columns, with no missing or additional columns:
+   - `asset_id`
+   - `parent_asset_id`
+   - `asset_type`
+   - `asset_name`
+   - `operational_status`
+   - `voltage_kv`
+   - `rating_kva`
+   - `manufacturer`
+   - `model`
+   - `serial_number`
+   - `commissioned_date`
+5. Count the number of data rows, excluding the header.
+6. Return a JSON response containing the row count and whether the columns are valid. Return a meaningful error if parsing or column validation fails.
+
+### Frontend
+
+1. When **Validate** is clicked, send the selected CSV file to the Go backend.
+2. While waiting for the backend response, display directly below the button: "Doing further validations on the backend..."
+3. On success, replace the loading message with: "File has been validated successfully! X rows read!"
+4. On failure, display the error returned by the backend.
+5. Prevent repeated submissions while loading.
+
+### Constraints
+
+- No database, Docker, or file persistence.
+- No asset-level or hierarchy validation yet.
+- Avoid unnecessary dependencies, abstractions, and files.
+- Keep the existing frontend design unchanged apart from the requested functionality.
+- Provide simple instructions to run the Go backend locally.
+
+```
+
 ## Rejected suggestions and why
 1. In the csv upload component it's check that the file is a csv only checked that it ends with .csv. I prompted for a better check as files can be mistakenly named. While these "simpler" validations can be made on the backend, my intention is to catch errors early and reduce unneccessary calls to the backend. I also prompted for missing/ duplicate columns checks.
 
