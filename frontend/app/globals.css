@@ -1,22 +1,30 @@
 @import "tailwindcss";
 
-:root {
+/* clean-energy theme: white surfaces, deep navy text, mint/teal accents. */
+[data-theme="clean-energy"] {
   --background: #ffffff;
-  --foreground: #171717;
+  --surface: #f3f6f7;
+  --foreground: #07253b;
+  --muted: #4f5a60;
+  --border: #dee2e6;
+  --primary: #48dcc0;
+  --primary-hover: #00b0b2;
+  --primary-foreground: #07253b;
+  --accent: #00878a;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

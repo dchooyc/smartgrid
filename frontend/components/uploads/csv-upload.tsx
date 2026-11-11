@@ -31,7 +31,7 @@ export default function CsvUpload({ onValidate }: CsvUploadProps) {
     <div className="flex w-full max-w-sm flex-col gap-3">
       <label
         htmlFor="csv-upload"
-        className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
+        className="text-sm font-medium text-foreground"
       >
         Upload a CSV file
       </label>
@@ -41,19 +41,19 @@ export default function CsvUpload({ onValidate }: CsvUploadProps) {
         type="file"
         accept=".csv"
         onChange={handleChange}
-        className="block w-full cursor-pointer rounded-md border border-zinc-300 text-sm text-zinc-700 file:mr-3 file:cursor-pointer file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-900 hover:file:bg-zinc-200 dark:border-zinc-700 dark:text-zinc-300 dark:file:bg-zinc-800 dark:file:text-zinc-100 dark:hover:file:bg-zinc-700"
+        className="block w-full cursor-pointer rounded-md border border-border text-sm text-muted file:mr-3 file:cursor-pointer file:border-0 file:bg-surface file:px-3 file:py-2 file:text-sm file:font-medium file:text-accent hover:file:bg-border focus-visible:outline-2 focus-visible:outline-accent"
       />
 
       <button
         type="button"
         disabled={!file}
         onClick={() => file && onValidate?.(file)}
-        className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+        className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-primary"
       >
         Validate
       </button>
 
-      <p className="text-sm text-zinc-600 dark:text-zinc-400" aria-live="polite">
+      <p className="text-sm text-muted" aria-live="polite">
         {file ? `Selected file: ${file.name}` : "No file selected (.csv only)"}
       </p>
     </div>
