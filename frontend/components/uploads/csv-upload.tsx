@@ -8,24 +8,96 @@ type CsvUploadProps = {
   onValidate?: (file: File) => void;
 };
 
-function isCsv(file: File): boolean {
-  return file.name.toLowerCase().endsWith(".csv");
+/**
+ * Parses text as comma-separated values and reports whether it is well formed:
+ * not binary, at least one row, quotes closed properly, and the same number of
+ * columns in every row.
+ */
+function isCsvContent(text: string): boolean {
+  if (text.includes("\0")) return false; // binary data, not text
+
+  let columns: number | null = null; // column count of the first row
+  let fields = 1; // fields seen so far in the current row
+  let rowHasContent = false;
+  let inQuotes = false;
+  let fieldStart = true; // at the first character of a field
+  let afterQuote = false; // just closed a quoted field
+
+  // Returns false if the finished row's column count differs from the first row.
+  function endRow(): boolean {
+    const blank = fields === 1 && !rowHasContent;
+    if (!blank) {
+      if (columns === null) columns = fields;
+      else if (fields !== columns) return false;
+    }
+    fields = 1;
+    rowHasContent = false;
+    fieldStart = true;
+    afterQuote = false;
+    return true;
+  }
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+
+    if (inQuotes) {
+      if (char !== '"') continue;
+      if (text[i + 1] === '"') i++; // escaped quote ("")
+      else {
+        inQuotes = false;
+        afterQuote = true;
+      }
+    } else if (char === ",") {
+      fields++;
+      rowHasContent = true;
+      fieldStart = true;
+      afterQuote = false;
+    } else if (char === "\n" || char === "\r") {
+      if (char === "\r" && text[i + 1] === "\n") i++;
+      if (!endRow()) return false;
+    } else if (afterQuote) {
+      return false; // text directly after a closing quote
+    } else if (char === '"' && fieldStart) {
+      inQuotes = true;
+      rowHasContent = true;
+      fieldStart = false;
+    } else {
+      rowHasContent = true;
+      fieldStart = false;
+    }
+  }
+
+  if (inQuotes) return false; // quote never closed
+  if (!endRow()) return false;
+  return columns !== null; // false when the file has no rows at all
+}
+
+/** True if the file is named .csv and its contents can be read as CSV. */
+async function isCsv(file: File): Promise<boolean> {
+  if (!file.name.toLowerCase().endsWith(".csv")) return false;
+
+  try {
+    return isCsvContent(await file.text());
+  } catch {
+    return false; // the file could not be read at all
+  }
 }
 
 export default function CsvUpload({ onValidate }: CsvUploadProps) {
   // Only one file at a time: selecting is only possible while this is null.
   const [file, setFile] = useState<File | null>(null);
 
-  function handleChange(event: ChangeEvent<HTMLInputElement>) {
-    const selected = event.target.files?.[0] ?? null;
+  async function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.target;
+    const selected = input.files?.[0];
+    if (!selected) return;
 
-    // The `accept` attribute is only a hint to the file picker, so check here too.
-    if (selected && !isCsv(selected)) {
-      event.target.value = "";
-      return;
+    if (await isCsv(selected)) {
+      setFile(selected);
+    } else {
+      input.value = ""; // allow picking the same file again
+      alert("The file uploaded cannot be read as a .csv file!");
     }
-
-    setFile(selected);
   }
 
   return (
