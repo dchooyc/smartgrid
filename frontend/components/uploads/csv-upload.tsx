@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { FaCloudArrowUp, FaFileCsv, FaXmark } from "react-icons/fa6";
 
 type CsvUploadProps = {
-  /** Called with the selected file when Validate is clicked. */
+  /** Called with the selected file when Validate is clicked and its columns are correct. */
   onValidate?: (file: File) => void;
 };
 
@@ -83,9 +83,67 @@ async function isCsv(file: File): Promise<boolean> {
   }
 }
 
+/** Column titles every asset file must have, as in grid_assets.csv. */
+const REQUIRED_COLUMNS = [
+  "asset_id",
+  "parent_asset_id",
+  "asset_type",
+  "asset_name",
+  "operational_status",
+  "voltage_kv",
+  "rating_kva",
+  "manufacturer",
+  "model",
+  "serial_number",
+  "commissioned_date",
+];
+
+/** Returns the column titles from the first non-blank row of CSV text. */
+function parseHeaderRow(text: string): string[] {
+  // Drop the byte-order mark Excel adds, and any leading blank lines.
+  const csv = text.replace(/^\uFEFF/, "").replace(/^[\r\n]+/, "");
+
+  const titles: string[] = [];
+  let title = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < csv.length; i++) {
+    const char = csv[i];
+
+    if (inQuotes) {
+      if (char !== '"') title += char;
+      else if (csv[i + 1] === '"') {
+        title += '"'; // escaped quote ("")
+        i++;
+      } else inQuotes = false;
+    } else if (char === '"' && title === "") {
+      inQuotes = true;
+    } else if (char === ",") {
+      titles.push(title.trim());
+      title = "";
+    } else if (char === "\n" || char === "\r") {
+      break; // end of the header row
+    } else {
+      title += char;
+    }
+  }
+
+  titles.push(title.trim());
+  return titles;
+}
+
 export default function CsvUpload({ onValidate }: CsvUploadProps) {
   // Only one file at a time: selecting is only possible while this is null.
   const [file, setFile] = useState<File | null>(null);
+
+  // Messages are shown in a dialog rather than alert(), which cannot format text.
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [message, setMessage] = useState<ReactNode>(null);
+
+  function showMessage(content: ReactNode) {
+    setMessage(content);
+    dialogRef.current?.showModal();
+  }
 
   async function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const input = event.target;
@@ -96,8 +154,60 @@ export default function CsvUpload({ onValidate }: CsvUploadProps) {
       setFile(selected);
     } else {
       input.value = ""; // allow picking the same file again
-      alert("The file uploaded cannot be read as a .csv file!");
+      showMessage(<p>The file uploaded cannot be read as a .csv file!</p>);
     }
+  }
+
+  async function handleValidate() {
+    if (!file) return;
+
+    // The header row is at the start, so there is no need to read the whole file.
+    const titles = parseHeaderRow(await file.slice(0, 64 * 1024).text());
+
+    const missing = REQUIRED_COLUMNS.filter((column) => !titles.includes(column));
+    if (missing.length > 0) {
+      showMessage(
+        <>
+          <p>The csv file does not contain these required columns:</p>
+          <p className="break-words font-bold">{missing.join(", ")}</p>
+          <p>Please upload a complete asset file.</p>
+        </>,
+      );
+      return;
+    }
+
+    // Titles that appear more than once, each listed once. Untitled columns
+    // are left to the column-count check below.
+    const duplicates = [
+      ...new Set(
+        titles.filter(
+          (title, index) => title !== "" && titles.indexOf(title) !== index,
+        ),
+      ),
+    ];
+    if (duplicates.length > 0) {
+      showMessage(
+        <>
+          <p>The file contains these duplicate columns:</p>
+          <p className="break-words font-bold">{duplicates.join(", ")}</p>
+          <p>Please remove the duplicate columns before proceeding.</p>
+        </>,
+      );
+      return;
+    }
+
+    // All required columns are present, so any difference in count is extras.
+    if (titles.length !== REQUIRED_COLUMNS.length) {
+      showMessage(
+        <p>
+          The csv file must contain exactly {REQUIRED_COLUMNS.length} columns,
+          but it has {titles.length}. Please remove the extra columns.
+        </p>,
+      );
+      return;
+    }
+
+    onValidate?.(file);
   }
 
   return (
@@ -138,11 +248,26 @@ export default function CsvUpload({ onValidate }: CsvUploadProps) {
       <button
         type="button"
         disabled={!file}
-        onClick={() => file && onValidate?.(file)}
+        onClick={handleValidate}
         className="rounded-full bg-primary px-6 py-4 text-lg font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-primary"
       >
         Validate
       </button>
+
+      <dialog
+        ref={dialogRef}
+        className="m-auto w-full max-w-md rounded-xl border border-border bg-background p-6 text-foreground shadow-xl backdrop:bg-foreground/40"
+      >
+        <div className="flex flex-col gap-3 text-sm">{message}</div>
+        <form method="dialog" className="mt-6 flex justify-end">
+          <button
+            autoFocus
+            className="cursor-pointer rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            OK
+          </button>
+        </form>
+      </dialog>
     </div>
   );
 }

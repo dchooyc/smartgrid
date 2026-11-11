@@ -39,6 +39,7 @@ Do not implement validation logic, a backend, or any additional features. Do not
 ```
 
 ## Rejected suggestions and why
+1. In the csv upload component it's check that the file is a csv only checked that it ends with .csv. I prompted for a better check as files can be mistakenly named. While these "simpler" validations can be made on the backend, my intention is to catch errors early and reduce unneccessary calls to the backend. I also prompted for missing/ duplicate columns checks.
 
 ## Reviewing and verification of generated code
 
