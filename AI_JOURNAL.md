@@ -87,6 +87,7 @@ Create a minimal Go backend (as a folder named backend outside of frontend) and 
 ## Reviewing and verification of generated code
 
 ## What the agent did poorly
+1. The agent doesn't refactor code for human readability very well. It tends to overdo the refactor. Of course refactoring is also a matter of personal taste.
 
 ## Approximate human working time
 

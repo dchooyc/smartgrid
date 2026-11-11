@@ -1,4 +1,4 @@
-import CsvUpload from "@/components/uploads/csv-upload";
+import { CsvUpload } from "@/components/uploads";
 
 export default function Home() {
   return (
