@@ -1,4 +1,5 @@
 import type { ValidationResult } from "../lib/api";
+import GeneratedFiles from "./generated-files";
 import ValidationReport from "./validation-report";
 
 export type BackendStatus =
@@ -21,7 +22,19 @@ export default function ValidationStatus({ status }: ValidationStatusProps) {
       {status.state === "loading" && (
         <p className="text-muted">Doing further validations on the backend...</p>
       )}
-      {status.state === "done" && <ValidationReport result={status.result} />}
+      {status.state === "done" && (
+        <>
+          <ValidationReport result={status.result} />
+          <GeneratedFiles
+            validFile={status.result.validFile}
+            invalidFile={
+              status.result.errors.length > 0
+                ? status.result.invalidFile
+                : undefined
+            }
+          />
+        </>
+      )}
       {status.state === "error" && (
         <p className="font-medium text-red-700">{status.message}</p>
       )}

@@ -33,7 +33,7 @@ func describe(errs []validationError) string {
 	}
 	text := ""
 	for _, e := range errs {
-		text += fmt.Sprintf("\n  line %d [%s] %s", e.Line, e.AssetID, e.Message)
+		text += fmt.Sprintf("\n  line %d [%s] (%s) %s", e.Line, e.AssetID, e.Label, e.Message)
 	}
 	return text
 }
@@ -60,7 +60,7 @@ func TestCheckRequiredFields(t *testing.T) {
 				{line: 5, id: "", assetType: "TRANSFORMER", name: "T1"},
 			},
 			want: []validationError{
-				{Line: 5, AssetID: "", Message: "This asset is missing asset_id."},
+				{Line: 5, AssetID: "", Label: "Missing Asset ID", Message: "This asset is missing asset_id."},
 			},
 		},
 		{
@@ -69,7 +69,7 @@ func TestCheckRequiredFields(t *testing.T) {
 				{line: 6, id: "TX-1", assetType: "", name: "T1"},
 			},
 			want: []validationError{
-				{Line: 6, AssetID: "TX-1", Message: "Asset TX-1 is missing asset_type."},
+				{Line: 6, AssetID: "TX-1", Label: "Missing Asset Type", Message: "Asset TX-1 is missing asset_type."},
 			},
 		},
 		{
@@ -78,7 +78,7 @@ func TestCheckRequiredFields(t *testing.T) {
 				{line: 7, id: "TX-1", assetType: "TRANSFORMER", name: ""},
 			},
 			want: []validationError{
-				{Line: 7, AssetID: "TX-1", Message: "Asset TX-1 is missing asset_name."},
+				{Line: 7, AssetID: "TX-1", Label: "Missing Asset Name", Message: "Asset TX-1 is missing asset_name."},
 			},
 		},
 		{
@@ -88,9 +88,9 @@ func TestCheckRequiredFields(t *testing.T) {
 				{line: 3},
 			},
 			want: []validationError{
-				{Line: 3, Message: "This asset is missing asset_id."},
-				{Line: 3, Message: "This asset is missing asset_type."},
-				{Line: 3, Message: "This asset is missing asset_name."},
+				{Line: 3, Label: "Missing Asset ID", Message: "This asset is missing asset_id."},
+				{Line: 3, Label: "Missing Asset Type", Message: "This asset is missing asset_type."},
+				{Line: 3, Label: "Missing Asset Name", Message: "This asset is missing asset_name."},
 			},
 		},
 		{
@@ -119,8 +119,8 @@ func TestCheckUniqueIDs(t *testing.T) {
 				{line: 4, id: "TX-1"},
 			},
 			want: []validationError{
-				{Line: 2, AssetID: "TX-1", Message: "Asset TX-1 has a duplicate asset_id, also used on line 4."},
-				{Line: 4, AssetID: "TX-1", Message: "Asset TX-1 has a duplicate asset_id, also used on line 2."},
+				{Line: 2, AssetID: "TX-1", Label: "Duplicate ID", Message: "Asset TX-1 has a duplicate asset_id, also used on line 4."},
+				{Line: 4, AssetID: "TX-1", Label: "Duplicate ID", Message: "Asset TX-1 has a duplicate asset_id, also used on line 2."},
 			},
 		},
 		{
@@ -131,9 +131,9 @@ func TestCheckUniqueIDs(t *testing.T) {
 				{line: 9, id: "TX-1"},
 			},
 			want: []validationError{
-				{Line: 2, AssetID: "TX-1", Message: "Asset TX-1 has a duplicate asset_id, also used on line 5, 9."},
-				{Line: 5, AssetID: "TX-1", Message: "Asset TX-1 has a duplicate asset_id, also used on line 2, 9."},
-				{Line: 9, AssetID: "TX-1", Message: "Asset TX-1 has a duplicate asset_id, also used on line 2, 5."},
+				{Line: 2, AssetID: "TX-1", Label: "Duplicate ID", Message: "Asset TX-1 has a duplicate asset_id, also used on line 5, 9."},
+				{Line: 5, AssetID: "TX-1", Label: "Duplicate ID", Message: "Asset TX-1 has a duplicate asset_id, also used on line 2, 9."},
+				{Line: 9, AssetID: "TX-1", Label: "Duplicate ID", Message: "Asset TX-1 has a duplicate asset_id, also used on line 2, 5."},
 			},
 		},
 		{
@@ -145,10 +145,10 @@ func TestCheckUniqueIDs(t *testing.T) {
 				{line: 5, id: "B"},
 			},
 			want: []validationError{
-				{Line: 2, AssetID: "A", Message: "Asset A has a duplicate asset_id, also used on line 4."},
-				{Line: 3, AssetID: "B", Message: "Asset B has a duplicate asset_id, also used on line 5."},
-				{Line: 4, AssetID: "A", Message: "Asset A has a duplicate asset_id, also used on line 2."},
-				{Line: 5, AssetID: "B", Message: "Asset B has a duplicate asset_id, also used on line 3."},
+				{Line: 2, AssetID: "A", Label: "Duplicate ID", Message: "Asset A has a duplicate asset_id, also used on line 4."},
+				{Line: 3, AssetID: "B", Label: "Duplicate ID", Message: "Asset B has a duplicate asset_id, also used on line 5."},
+				{Line: 4, AssetID: "A", Label: "Duplicate ID", Message: "Asset A has a duplicate asset_id, also used on line 2."},
+				{Line: 5, AssetID: "B", Label: "Duplicate ID", Message: "Asset B has a duplicate asset_id, also used on line 3."},
 			},
 		},
 		{
@@ -189,7 +189,7 @@ func TestCheckSupportedValues(t *testing.T) {
 				{line: 8, id: "GEN-1", assetType: "GENERATOR", status: "IN_SERVICE"},
 			},
 			want: []validationError{
-				{Line: 8, AssetID: "GEN-1", Message: `Asset GEN-1 has unsupported asset_type "GENERATOR".`},
+				{Line: 8, AssetID: "GEN-1", Label: "Invalid Asset Type", Message: `Asset GEN-1 has unsupported asset_type "GENERATOR".`},
 			},
 		},
 		{
@@ -198,7 +198,7 @@ func TestCheckSupportedValues(t *testing.T) {
 				{line: 8, id: "TX-1", assetType: "transformer", status: "IN_SERVICE"},
 			},
 			want: []validationError{
-				{Line: 8, AssetID: "TX-1", Message: `Asset TX-1 has unsupported asset_type "transformer".`},
+				{Line: 8, AssetID: "TX-1", Label: "Invalid Asset Type", Message: `Asset TX-1 has unsupported asset_type "transformer".`},
 			},
 		},
 		{
@@ -214,7 +214,7 @@ func TestCheckSupportedValues(t *testing.T) {
 				{line: 9, id: "PNL-1", assetType: "SWITCHBOARD_PANEL", status: "BROKEN"},
 			},
 			want: []validationError{
-				{Line: 9, AssetID: "PNL-1", Message: `Asset PNL-1 has unsupported operational_status "BROKEN".`},
+				{Line: 9, AssetID: "PNL-1", Label: "Invalid Status", Message: `Asset PNL-1 has unsupported operational_status "BROKEN".`},
 			},
 		},
 		{
@@ -223,7 +223,7 @@ func TestCheckSupportedValues(t *testing.T) {
 				{line: 9, id: "PNL-1", assetType: "SWITCHBOARD_PANEL", status: ""},
 			},
 			want: []validationError{
-				{Line: 9, AssetID: "PNL-1", Message: `Asset PNL-1 has unsupported operational_status "".`},
+				{Line: 9, AssetID: "PNL-1", Label: "Invalid Status", Message: `Asset PNL-1 has unsupported operational_status "".`},
 			},
 		},
 		{
@@ -232,8 +232,8 @@ func TestCheckSupportedValues(t *testing.T) {
 				{line: 4, id: "X-1", assetType: "CABLE", status: "RETIRED"},
 			},
 			want: []validationError{
-				{Line: 4, AssetID: "X-1", Message: `Asset X-1 has unsupported asset_type "CABLE".`},
-				{Line: 4, AssetID: "X-1", Message: `Asset X-1 has unsupported operational_status "RETIRED".`},
+				{Line: 4, AssetID: "X-1", Label: "Invalid Asset Type", Message: `Asset X-1 has unsupported asset_type "CABLE".`},
+				{Line: 4, AssetID: "X-1", Label: "Invalid Status", Message: `Asset X-1 has unsupported operational_status "RETIRED".`},
 			},
 		},
 	})
@@ -264,7 +264,7 @@ func TestCheckDatesAndNumbers(t *testing.T) {
 				{line: 6, id: "TX-BD", commissionedDate: "2026-13-41"},
 			},
 			want: []validationError{
-				{Line: 6, AssetID: "TX-BD", Message: `Asset TX-BD has invalid commissioned_date "2026-13-41" (expected day/month/year, e.g. 15/2/09).`},
+				{Line: 6, AssetID: "TX-BD", Label: "Invalid Date", Message: `Asset TX-BD has invalid commissioned_date "2026-13-41" (expected day/month/year, e.g. 15/2/09).`},
 			},
 		},
 		{
@@ -275,9 +275,9 @@ func TestCheckDatesAndNumbers(t *testing.T) {
 				{line: 8, id: "C", commissionedDate: "15/13/09"},
 			},
 			want: []validationError{
-				{Line: 6, AssetID: "A", Message: `Asset A has invalid commissioned_date "31/2/20" (expected day/month/year, e.g. 15/2/09).`},
-				{Line: 7, AssetID: "B", Message: `Asset B has invalid commissioned_date "29/2/21" (expected day/month/year, e.g. 15/2/09).`},
-				{Line: 8, AssetID: "C", Message: `Asset C has invalid commissioned_date "15/13/09" (expected day/month/year, e.g. 15/2/09).`},
+				{Line: 6, AssetID: "A", Label: "Invalid Date", Message: `Asset A has invalid commissioned_date "31/2/20" (expected day/month/year, e.g. 15/2/09).`},
+				{Line: 7, AssetID: "B", Label: "Invalid Date", Message: `Asset B has invalid commissioned_date "29/2/21" (expected day/month/year, e.g. 15/2/09).`},
+				{Line: 8, AssetID: "C", Label: "Invalid Date", Message: `Asset C has invalid commissioned_date "15/13/09" (expected day/month/year, e.g. 15/2/09).`},
 			},
 		},
 		{
@@ -286,7 +286,7 @@ func TestCheckDatesAndNumbers(t *testing.T) {
 				{line: 6, id: "A", commissionedDate: "yesterday"},
 			},
 			want: []validationError{
-				{Line: 6, AssetID: "A", Message: `Asset A has invalid commissioned_date "yesterday" (expected day/month/year, e.g. 15/2/09).`},
+				{Line: 6, AssetID: "A", Label: "Invalid Date", Message: `Asset A has invalid commissioned_date "yesterday" (expected day/month/year, e.g. 15/2/09).`},
 			},
 		},
 		{
@@ -297,9 +297,9 @@ func TestCheckDatesAndNumbers(t *testing.T) {
 				{line: 5, id: "C", voltageKV: "NaN"},
 			},
 			want: []validationError{
-				{Line: 3, AssetID: "A", Message: `Asset A has non-numeric voltage_kv "abc".`},
-				{Line: 4, AssetID: "B", Message: `Asset B has non-numeric voltage_kv "22kV".`},
-				{Line: 5, AssetID: "C", Message: `Asset C has non-numeric voltage_kv "NaN".`},
+				{Line: 3, AssetID: "A", Label: "Invalid Voltage", Message: `Asset A has non-numeric voltage_kv "abc".`},
+				{Line: 4, AssetID: "B", Label: "Invalid Voltage", Message: `Asset B has non-numeric voltage_kv "22kV".`},
+				{Line: 5, AssetID: "C", Label: "Invalid Voltage", Message: `Asset C has non-numeric voltage_kv "NaN".`},
 			},
 		},
 		{
@@ -309,8 +309,8 @@ func TestCheckDatesAndNumbers(t *testing.T) {
 				{line: 4, id: "B", ratingKVA: "Inf"},
 			},
 			want: []validationError{
-				{Line: 3, AssetID: "A", Message: `Asset A has non-numeric rating_kva "lots".`},
-				{Line: 4, AssetID: "B", Message: `Asset B has non-numeric rating_kva "Inf".`},
+				{Line: 3, AssetID: "A", Label: "Invalid Rating", Message: `Asset A has non-numeric rating_kva "lots".`},
+				{Line: 4, AssetID: "B", Label: "Invalid Rating", Message: `Asset B has non-numeric rating_kva "Inf".`},
 			},
 		},
 		{
@@ -320,8 +320,8 @@ func TestCheckDatesAndNumbers(t *testing.T) {
 				{line: 10, id: "TX-2", ratingKVA: "-0.5"},
 			},
 			want: []validationError{
-				{Line: 9, AssetID: "TX-NR", Message: "Asset TX-NR has negative rating_kva -500."},
-				{Line: 10, AssetID: "TX-2", Message: "Asset TX-2 has negative rating_kva -0.5."},
+				{Line: 9, AssetID: "TX-NR", Label: "Negative Rating", Message: "Asset TX-NR has negative rating_kva -500."},
+				{Line: 10, AssetID: "TX-2", Label: "Negative Rating", Message: "Asset TX-2 has negative rating_kva -0.5."},
 			},
 		},
 		{
@@ -330,9 +330,9 @@ func TestCheckDatesAndNumbers(t *testing.T) {
 				{line: 4, id: "A", commissionedDate: "soon", voltageKV: "high", ratingKVA: "-1"},
 			},
 			want: []validationError{
-				{Line: 4, AssetID: "A", Message: `Asset A has invalid commissioned_date "soon" (expected day/month/year, e.g. 15/2/09).`},
-				{Line: 4, AssetID: "A", Message: `Asset A has non-numeric voltage_kv "high".`},
-				{Line: 4, AssetID: "A", Message: "Asset A has negative rating_kva -1."},
+				{Line: 4, AssetID: "A", Label: "Invalid Date", Message: `Asset A has invalid commissioned_date "soon" (expected day/month/year, e.g. 15/2/09).`},
+				{Line: 4, AssetID: "A", Label: "Invalid Voltage", Message: `Asset A has non-numeric voltage_kv "high".`},
+				{Line: 4, AssetID: "A", Label: "Negative Rating", Message: "Asset A has negative rating_kva -1."},
 			},
 		},
 	})
@@ -357,7 +357,7 @@ func TestCheckParentRequirements(t *testing.T) {
 				{line: 3, id: "SS-2", assetType: "SUBSTATION", parentID: "SS-1"},
 			},
 			want: []validationError{
-				{Line: 3, AssetID: "SS-2", Message: "Asset SS-2 is a substation and cannot have a parent (SS-1)."},
+				{Line: 3, AssetID: "SS-2", Label: "Substation Has Parent", Message: "Asset SS-2 is a substation and cannot have a parent (SS-1)."},
 			},
 		},
 		{
@@ -369,10 +369,10 @@ func TestCheckParentRequirements(t *testing.T) {
 				{line: 5, id: "PNL-1", assetType: "SWITCHBOARD_PANEL"},
 			},
 			want: []validationError{
-				{Line: 2, AssetID: "TX-1", Message: "Asset TX-1 has no parent; only substations can be without one."},
-				{Line: 3, AssetID: "LVB-1", Message: "Asset LVB-1 has no parent; only substations can be without one."},
-				{Line: 4, AssetID: "SWB-1", Message: "Asset SWB-1 has no parent; only substations can be without one."},
-				{Line: 5, AssetID: "PNL-1", Message: "Asset PNL-1 has no parent; only substations can be without one."},
+				{Line: 2, AssetID: "TX-1", Label: "Missing Parent", Message: "Asset TX-1 has no parent; only substations can be without one."},
+				{Line: 3, AssetID: "LVB-1", Label: "Missing Parent", Message: "Asset LVB-1 has no parent; only substations can be without one."},
+				{Line: 4, AssetID: "SWB-1", Label: "Missing Parent", Message: "Asset SWB-1 has no parent; only substations can be without one."},
+				{Line: 5, AssetID: "PNL-1", Label: "Missing Parent", Message: "Asset PNL-1 has no parent; only substations can be without one."},
 			},
 		},
 		{
@@ -381,7 +381,7 @@ func TestCheckParentRequirements(t *testing.T) {
 				{line: 2, id: "GEN-1", assetType: "GENERATOR"},
 			},
 			want: []validationError{
-				{Line: 2, AssetID: "GEN-1", Message: "Asset GEN-1 has no parent; only substations can be without one."},
+				{Line: 2, AssetID: "GEN-1", Label: "Missing Parent", Message: "Asset GEN-1 has no parent; only substations can be without one."},
 			},
 		},
 		{
@@ -420,7 +420,7 @@ func TestCheckCycles(t *testing.T) {
 				{line: 3, id: "SWB-1", parentID: "SWB-1"},
 			},
 			want: []validationError{
-				{Line: 3, AssetID: "SWB-1", Message: "Asset SWB-1 is its own parent."},
+				{Line: 3, AssetID: "SWB-1", Label: "Self Parent", Message: "Asset SWB-1 is its own parent."},
 			},
 		},
 		{
@@ -430,8 +430,8 @@ func TestCheckCycles(t *testing.T) {
 				{line: 3, id: "B", parentID: "A"},
 			},
 			want: []validationError{
-				{Line: 2, AssetID: "A", Message: "Asset A is in a circular parent relationship: A → B → A."},
-				{Line: 3, AssetID: "B", Message: "Asset B is in a circular parent relationship: B → A → B."},
+				{Line: 2, AssetID: "A", Label: "Cycle Detected", Message: "Asset A is in a circular parent relationship: A → B → A."},
+				{Line: 3, AssetID: "B", Label: "Cycle Detected", Message: "Asset B is in a circular parent relationship: B → A → B."},
 			},
 		},
 		{
@@ -442,9 +442,9 @@ func TestCheckCycles(t *testing.T) {
 				{line: 4, id: "C", parentID: "A"},
 			},
 			want: []validationError{
-				{Line: 2, AssetID: "A", Message: "Asset A is in a circular parent relationship: A → B → C → A."},
-				{Line: 3, AssetID: "B", Message: "Asset B is in a circular parent relationship: B → C → A → B."},
-				{Line: 4, AssetID: "C", Message: "Asset C is in a circular parent relationship: C → A → B → C."},
+				{Line: 2, AssetID: "A", Label: "Cycle Detected", Message: "Asset A is in a circular parent relationship: A → B → C → A."},
+				{Line: 3, AssetID: "B", Label: "Cycle Detected", Message: "Asset B is in a circular parent relationship: B → C → A → B."},
+				{Line: 4, AssetID: "C", Label: "Cycle Detected", Message: "Asset C is in a circular parent relationship: C → A → B → C."},
 			},
 		},
 		{
@@ -455,8 +455,8 @@ func TestCheckCycles(t *testing.T) {
 				{line: 4, id: "B", parentID: "A"},
 			},
 			want: []validationError{
-				{Line: 3, AssetID: "A", Message: "Asset A is in a circular parent relationship: A → B → A."},
-				{Line: 4, AssetID: "B", Message: "Asset B is in a circular parent relationship: B → A → B."},
+				{Line: 3, AssetID: "A", Label: "Cycle Detected", Message: "Asset A is in a circular parent relationship: A → B → A."},
+				{Line: 4, AssetID: "B", Label: "Cycle Detected", Message: "Asset B is in a circular parent relationship: B → A → B."},
 			},
 		},
 		{
@@ -468,9 +468,9 @@ func TestCheckCycles(t *testing.T) {
 				{line: 5, id: "X", parentID: "X"},
 			},
 			want: []validationError{
-				{Line: 2, AssetID: "A", Message: "Asset A is in a circular parent relationship: A → B → A."},
-				{Line: 3, AssetID: "B", Message: "Asset B is in a circular parent relationship: B → A → B."},
-				{Line: 5, AssetID: "X", Message: "Asset X is its own parent."},
+				{Line: 2, AssetID: "A", Label: "Cycle Detected", Message: "Asset A is in a circular parent relationship: A → B → A."},
+				{Line: 3, AssetID: "B", Label: "Cycle Detected", Message: "Asset B is in a circular parent relationship: B → A → B."},
+				{Line: 5, AssetID: "X", Label: "Self Parent", Message: "Asset X is its own parent."},
 			},
 		},
 		{
@@ -596,7 +596,7 @@ func TestCheckHierarchy(t *testing.T) {
 				{line: 3, id: "PNL-M", assetType: "SWITCHBOARD_PANEL", parentID: "SWB-404"},
 			},
 			want: []validationError{
-				{Line: 3, AssetID: "PNL-M", Message: "Asset PNL-M has parent SWB-404, which does not exist in the file."},
+				{Line: 3, AssetID: "PNL-M", Label: "Parent Not Found", Message: "Asset PNL-M has parent SWB-404, which does not exist in the file."},
 			},
 		},
 		{
@@ -606,7 +606,7 @@ func TestCheckHierarchy(t *testing.T) {
 				{line: 3, id: "PNL-BP", assetType: "SWITCHBOARD_PANEL", parentID: "SS-1"},
 			},
 			want: []validationError{
-				{Line: 3, AssetID: "PNL-BP", Message: "Asset PNL-BP is a SWITCHBOARD_PANEL, so its parent must be a SWITCHBOARD, but SS-1 is a SUBSTATION."},
+				{Line: 3, AssetID: "PNL-BP", Label: "Invalid Parent Type", Message: "Asset PNL-BP is a SWITCHBOARD_PANEL, so its parent must be a SWITCHBOARD, but SS-1 is a SUBSTATION."},
 			},
 		},
 		{
@@ -617,7 +617,7 @@ func TestCheckHierarchy(t *testing.T) {
 				{line: 4, id: "TX-BP", assetType: "TRANSFORMER", parentID: "SWB-1"},
 			},
 			want: []validationError{
-				{Line: 4, AssetID: "TX-BP", Message: "Asset TX-BP is a TRANSFORMER, so its parent must be a SUBSTATION, but SWB-1 is a SWITCHBOARD."},
+				{Line: 4, AssetID: "TX-BP", Label: "Invalid Parent Type", Message: "Asset TX-BP is a TRANSFORMER, so its parent must be a SUBSTATION, but SWB-1 is a SWITCHBOARD."},
 			},
 		},
 		{
@@ -627,7 +627,7 @@ func TestCheckHierarchy(t *testing.T) {
 				{line: 3, id: "PNL-1", assetType: "SWITCHBOARD_PANEL", parentID: "SWB-1"},
 			},
 			want: []validationError{
-				{Line: 3, AssetID: "PNL-1", Message: "Asset PNL-1 does not resolve to a substation: its top-level ancestor SWB-1 is a SWITCHBOARD."},
+				{Line: 3, AssetID: "PNL-1", Label: "No Substation Root", Message: "Asset PNL-1 does not resolve to a substation: its top-level ancestor SWB-1 is a SWITCHBOARD."},
 			},
 		},
 		{
@@ -637,8 +637,8 @@ func TestCheckHierarchy(t *testing.T) {
 				{line: 3, id: "PNL-1", assetType: "SWITCHBOARD_PANEL", parentID: "SWB-1"},
 			},
 			want: []validationError{
-				{Line: 2, AssetID: "SWB-1", Message: "Asset SWB-1 has parent SS-404, which does not exist in the file."},
-				{Line: 3, AssetID: "PNL-1", Message: "Asset PNL-1 does not resolve to a substation: its ancestor SWB-1 has a parent that does not exist."},
+				{Line: 2, AssetID: "SWB-1", Label: "Parent Not Found", Message: "Asset SWB-1 has parent SS-404, which does not exist in the file."},
+				{Line: 3, AssetID: "PNL-1", Label: "No Substation Root", Message: "Asset PNL-1 does not resolve to a substation: its ancestor SWB-1 has a parent that does not exist."},
 			},
 		},
 		{
@@ -649,11 +649,11 @@ func TestCheckHierarchy(t *testing.T) {
 				{line: 4, id: "PNL-1", assetType: "SWITCHBOARD_PANEL", parentID: "SWB-A"},
 			},
 			want: []validationError{
-				{Line: 2, AssetID: "SWB-A", Message: "Asset SWB-A is a SWITCHBOARD, so its parent must be a SUBSTATION, but SWB-B is a SWITCHBOARD."},
-				{Line: 2, AssetID: "SWB-A", Message: "Asset SWB-A does not resolve to a substation: its parent chain is circular."},
-				{Line: 3, AssetID: "SWB-B", Message: "Asset SWB-B is a SWITCHBOARD, so its parent must be a SUBSTATION, but SWB-A is a SWITCHBOARD."},
-				{Line: 3, AssetID: "SWB-B", Message: "Asset SWB-B does not resolve to a substation: its parent chain is circular."},
-				{Line: 4, AssetID: "PNL-1", Message: "Asset PNL-1 does not resolve to a substation: its parent chain is circular."},
+				{Line: 2, AssetID: "SWB-A", Label: "Invalid Parent Type", Message: "Asset SWB-A is a SWITCHBOARD, so its parent must be a SUBSTATION, but SWB-B is a SWITCHBOARD."},
+				{Line: 2, AssetID: "SWB-A", Label: "No Substation Root", Message: "Asset SWB-A does not resolve to a substation: its parent chain is circular."},
+				{Line: 3, AssetID: "SWB-B", Label: "Invalid Parent Type", Message: "Asset SWB-B is a SWITCHBOARD, so its parent must be a SUBSTATION, but SWB-A is a SWITCHBOARD."},
+				{Line: 3, AssetID: "SWB-B", Label: "No Substation Root", Message: "Asset SWB-B does not resolve to a substation: its parent chain is circular."},
+				{Line: 4, AssetID: "PNL-1", Label: "No Substation Root", Message: "Asset PNL-1 does not resolve to a substation: its parent chain is circular."},
 			},
 		},
 		{
@@ -662,8 +662,8 @@ func TestCheckHierarchy(t *testing.T) {
 				{line: 2, id: "SWB-1", assetType: "SWITCHBOARD", parentID: "SWB-1"},
 			},
 			want: []validationError{
-				{Line: 2, AssetID: "SWB-1", Message: "Asset SWB-1 is a SWITCHBOARD, so its parent must be a SUBSTATION, but SWB-1 is a SWITCHBOARD."},
-				{Line: 2, AssetID: "SWB-1", Message: "Asset SWB-1 does not resolve to a substation: its parent chain is circular."},
+				{Line: 2, AssetID: "SWB-1", Label: "Invalid Parent Type", Message: "Asset SWB-1 is a SWITCHBOARD, so its parent must be a SUBSTATION, but SWB-1 is a SWITCHBOARD."},
+				{Line: 2, AssetID: "SWB-1", Label: "No Substation Root", Message: "Asset SWB-1 does not resolve to a substation: its parent chain is circular."},
 			},
 		},
 		{
@@ -673,8 +673,8 @@ func TestCheckHierarchy(t *testing.T) {
 				{line: 3, id: "TX-1", assetType: "TRANSFORMER", parentID: "X-1"},
 			},
 			want: []validationError{
-				{Line: 3, AssetID: "TX-1", Message: "Asset TX-1 is a TRANSFORMER, so its parent must be a SUBSTATION, but X-1 has no asset_type."},
-				{Line: 3, AssetID: "TX-1", Message: "Asset TX-1 does not resolve to a substation: its top-level ancestor X-1 has no asset_type."},
+				{Line: 3, AssetID: "TX-1", Label: "Invalid Parent Type", Message: "Asset TX-1 is a TRANSFORMER, so its parent must be a SUBSTATION, but X-1 has no asset_type."},
+				{Line: 3, AssetID: "TX-1", Label: "No Substation Root", Message: "Asset TX-1 does not resolve to a substation: its top-level ancestor X-1 has no asset_type."},
 			},
 		},
 		{
@@ -685,7 +685,7 @@ func TestCheckHierarchy(t *testing.T) {
 				{line: 4, id: "GEN-2", assetType: "GENERATOR", parentID: "SS-404"},
 			},
 			want: []validationError{
-				{Line: 4, AssetID: "GEN-2", Message: "Asset GEN-2 has parent SS-404, which does not exist in the file."},
+				{Line: 4, AssetID: "GEN-2", Label: "Parent Not Found", Message: "Asset GEN-2 has parent SS-404, which does not exist in the file."},
 			},
 		},
 		{
@@ -717,8 +717,8 @@ func TestCheckDuplicateSerials(t *testing.T) {
 				{line: 4, id: "TX-D2", serialNumber: "SER-TX-DUP"},
 			},
 			want: []validationError{
-				{Line: 2, AssetID: "TX-D1", Message: "Asset TX-D1 has duplicate serial_number SER-TX-DUP, also used on line 4."},
-				{Line: 4, AssetID: "TX-D2", Message: "Asset TX-D2 has duplicate serial_number SER-TX-DUP, also used on line 2."},
+				{Line: 2, AssetID: "TX-D1", Label: "Duplicate Serial", Message: "Asset TX-D1 has duplicate serial_number SER-TX-DUP, also used on line 4."},
+				{Line: 4, AssetID: "TX-D2", Label: "Duplicate Serial", Message: "Asset TX-D2 has duplicate serial_number SER-TX-DUP, also used on line 2."},
 			},
 		},
 		{

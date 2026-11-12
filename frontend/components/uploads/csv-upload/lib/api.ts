@@ -6,10 +6,17 @@ export type ValidationIssue = {
   message: string;
 };
 
+export type GeneratedFile = {
+  name: string;
+  content: string; // CSV text
+};
+
 export type ValidationResult = {
   totalRows: number;
   errors: ValidationIssue[];
   warnings: ValidationIssue[]; // do not fail validation
+  validFile: GeneratedFile; // rows without errors
+  invalidFile: GeneratedFile; // rows with errors
 };
 
 // Throws if the backend cannot be reached or cannot process the file at all.
@@ -34,5 +41,7 @@ export async function validateOnBackend(file: File): Promise<ValidationResult> {
     totalRows: result.total_rows,
     errors: result.errors,
     warnings: result.warnings,
+    validFile: result.valid_file,
+    invalidFile: result.invalid_file,
   };
 }

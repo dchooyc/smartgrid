@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 )
 
 const (
@@ -41,6 +42,9 @@ type validateResponse struct {
 	TotalRows int               `json:"total_rows"`
 	Errors    []validationError `json:"errors"`
 	Warnings  []validationError `json:"warnings"`
+	// ValidFile holds the rows without errors and InvalidFile the rest.
+	ValidFile   *csvFile `json:"valid_file,omitempty"`
+	InvalidFile *csvFile `json:"invalid_file,omitempty"`
 	// Error is set when the file itself could not be processed.
 	Error string `json:"error,omitempty"`
 }
@@ -57,7 +61,7 @@ func handleValidate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
-	file, _, err := r.FormFile("file")
+	file, upload, err := r.FormFile("file")
 	if err != nil {
 		var tooLarge *http.MaxBytesError
 		if errors.As(err, &tooLarge) {
@@ -93,11 +97,19 @@ func handleValidate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	errs := validateAssets(assets)
+	validFile, invalidFile, err := buildCSVFiles(upload.Filename, header, assets, errs, time.Now())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "the result files could not be generated: "+err.Error())
+		return
+	}
+
 	writeJSON(w, http.StatusOK, validateResponse{
-		Valid:     len(errs) == 0,
-		TotalRows: len(assets),
-		Errors:    errs,
-		Warnings:  findWarnings(assets),
+		Valid:       len(errs) == 0,
+		TotalRows:   len(assets),
+		Errors:      errs,
+		Warnings:    findWarnings(assets),
+		ValidFile:   &validFile,
+		InvalidFile: &invalidFile,
 	})
 }
 
@@ -140,6 +152,7 @@ func readAssets(reader *csv.Reader, columns []string) ([]asset, error) {
 			ratingKVA:        field("rating_kva"),
 			serialNumber:     field("serial_number"),
 			commissionedDate: field("commissioned_date"),
+			record:           record,
 		})
 	}
 }
