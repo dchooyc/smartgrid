@@ -81,6 +81,45 @@ Create a minimal Go backend (as a folder named backend outside of frontend) and 
 
 ```
 
+```
+Extend the existing Go backend to validate CSV asset records. Keep the code simple, readable, and organized into separate validation functions executed in this order:
+
+1. **Required fields:** `asset_id`, `asset_type`, and `asset_name` cannot be empty.
+2. **Unique IDs:** Detect duplicate `asset_id` values and report every row containing a duplicate.
+3. **Supported values:** Validate asset types and operational statuses.
+4. **Dates and numbers:** Validate dates and numeric fields. `rating_kva` cannot be negative.
+5. **Parent requirements:** Substations cannot have parents; all other assets must have one.
+6. **Cycle detection:** Build a map of assets by ID. Detect self-parenting and circular parent-child relationships using a separate DFS function.
+7. **Hierarchy validation:** Verify that every parent exists in the CSV, each relationship follows the permitted hierarchy, and every asset ultimately resolves to a substation root.
+
+### Permitted hierarchy
+
+| Asset type | Permitted parent |
+|---|---|
+| SUBSTATION | None |
+| TRANSFORMER | SUBSTATION |
+| LV_BOARD | SUBSTATION |
+| SWITCHBOARD | SUBSTATION |
+| SWITCHBOARD_PANEL | SWITCHBOARD |
+
+Supported statuses: `IN_SERVICE`, `MAINTENANCE`, `OUT_OF_SERVICE`.
+
+### Backend response
+
+- Run all validation functions and collect errors rather than stopping at the first error.
+- Return a JSON list of errors containing the original CSV line number, asset ID where available, and meaningful error message.
+- Include the total rows processed and whether validation passed.
+- No database or persistence.
+
+### Frontend
+
+- Display all validation errors as a numbered list, e.g. "Line 12: Asset TR-001 has an invalid parent."
+- If no errors exist, display the existing success message with the row count.
+- Preserve the existing loading behavior and design.
+
+Keep each validation function independent and easy to test. Avoid unnecessary dependencies, abstractions, or unrelated changes.
+```
+
 ## Rejected suggestions and why
 1. In the csv upload component it's check that the file is a csv only checked that it ends with .csv. I prompted for a better check as files can be mistakenly named. While these "simpler" validations can be made on the backend, my intention is to catch errors early and reduce unneccessary calls to the backend. I also prompted for missing/ duplicate columns checks.
 
@@ -94,7 +133,7 @@ Create a minimal Go backend (as a folder named backend outside of frontend) and 
 | Day | Work done | Human working time |
 |-----|-------------------------|--------------------|
 | Day 0 | Read requirements, planning, setup | 2 hours |
-| Day 1 | TBD | TBD |
+| Day 1 | Upload csv, backend | 3 hours |
 | Day 2 | TBD | TBD |
 | Day 3 |TBD | TBD |
 | Day 4 | TBD | TBD |

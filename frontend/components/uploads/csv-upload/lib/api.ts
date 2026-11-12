@@ -1,6 +1,17 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
-export async function validateOnBackend(file: File): Promise<number> {
+export type ValidationError = {
+  line: number;
+  message: string;
+};
+
+export type ValidationResult = {
+  totalRows: number;
+  errors: ValidationError[];
+};
+
+// Throws if the backend cannot be reached or cannot process the file at all.
+export async function validateOnBackend(file: File): Promise<ValidationResult> {
   const body = new FormData();
   body.append("file", file);
 
@@ -17,5 +28,5 @@ export async function validateOnBackend(file: File): Promise<number> {
       result?.error ?? `The backend returned an error (${response.status}).`,
     );
   }
-  return result.row_count;
+  return { totalRows: result.total_rows, errors: result.errors };
 }

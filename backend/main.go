@@ -37,9 +37,11 @@ var requiredColumns = []string{
 }
 
 type validateResponse struct {
-	RowCount     int    `json:"row_count"`
-	ColumnsValid bool   `json:"columns_valid"`
-	Error        string `json:"error,omitempty"`
+	Valid     bool              `json:"valid"`
+	TotalRows int               `json:"total_rows"`
+	Errors    []validationError `json:"errors"`
+	// Error is set when the file itself could not be processed.
+	Error string `json:"error,omitempty"`
 }
 
 func main() {
@@ -77,42 +79,71 @@ func handleValidate(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "the file could not be read as CSV: "+err.Error())
 		return
 	}
-	if err := checkColumns(header); err != nil {
+	columns := cleanHeader(header)
+	if err := checkColumns(columns); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	// Count the data rows. The reader also rejects rows whose number of
-	// fields differs from the header.
-	rowCount := 0
-	for {
-		_, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			writeJSON(w, http.StatusBadRequest, validateResponse{
-				ColumnsValid: true,
-				Error:        "the file could not be read as CSV: " + err.Error(),
-			})
-			return
-		}
-		rowCount++
+	assets, err := readAssets(reader, columns)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "the file could not be read as CSV: "+err.Error())
+		return
 	}
 
-	writeJSON(w, http.StatusOK, validateResponse{RowCount: rowCount, ColumnsValid: true})
+	errs := validateAssets(assets)
+	writeJSON(w, http.StatusOK, validateResponse{
+		Valid:     len(errs) == 0,
+		TotalRows: len(assets),
+		Errors:    errs,
+	})
 }
 
-// checkColumns reports an error unless the header holds exactly the required
-// columns, in any order, with none missing, added or repeated.
-func checkColumns(header []string) error {
+// cleanHeader trims the column titles and drops the byte-order mark that
+// Excel puts in front of the first one.
+func cleanHeader(header []string) []string {
 	columns := make([]string, len(header))
 	for i, title := range header {
 		columns[i] = strings.TrimSpace(title)
 	}
-	// Excel puts a byte-order mark in front of the first title.
 	columns[0] = strings.TrimPrefix(columns[0], "\uFEFF")
+	return columns
+}
 
+// readAssets reads the data rows. The reader rejects rows whose number of
+// fields differs from the header.
+func readAssets(reader *csv.Reader, columns []string) ([]asset, error) {
+	var assets []asset
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			return assets, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		field := func(column string) string {
+			return strings.TrimSpace(record[slices.Index(columns, column)])
+		}
+		line, _ := reader.FieldPos(0)
+		assets = append(assets, asset{
+			line:             line,
+			id:               field("asset_id"),
+			parentID:         field("parent_asset_id"),
+			assetType:        field("asset_type"),
+			name:             field("asset_name"),
+			status:           field("operational_status"),
+			voltageKV:        field("voltage_kv"),
+			ratingKVA:        field("rating_kva"),
+			commissionedDate: field("commissioned_date"),
+		})
+	}
+}
+
+// checkColumns reports an error unless the header holds exactly the required
+// columns, in any order, with none missing, added or repeated.
+func checkColumns(columns []string) error {
 	var missing, unexpected, duplicate []string
 	for _, column := range requiredColumns {
 		if !slices.Contains(columns, column) {
@@ -145,7 +176,7 @@ func checkColumns(header []string) error {
 }
 
 func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, validateResponse{Error: message})
+	writeJSON(w, status, validateResponse{Errors: []validationError{}, Error: message})
 }
 
 func writeJSON(w http.ResponseWriter, status int, body validateResponse) {
