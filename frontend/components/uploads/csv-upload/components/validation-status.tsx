@@ -1,4 +1,4 @@
-import type { ValidationResult } from "../lib/api";
+import { hasRowsToFix, type ValidationResult } from "../lib/api";
 import CommitRows from "./commit-rows";
 import GeneratedFiles from "./generated-files";
 import ValidationReport from "./validation-report";
@@ -33,7 +33,7 @@ export default function ValidationStatus({
           <GeneratedFiles
             validFile={status.result.validFile}
             invalidFile={
-              status.result.errors.length > 0
+              hasRowsToFix(status.result)
                 ? status.result.invalidFile
                 : undefined
             }

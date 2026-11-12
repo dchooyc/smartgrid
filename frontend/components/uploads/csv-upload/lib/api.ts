@@ -19,6 +19,15 @@ export type ValidationResult = {
   invalidFile: GeneratedFile; // rows with errors
 };
 
+// The backend's error type for rows whose asset is already in the database.
+const ALREADY_STORED = "Already in database";
+
+// True if some row has an error the user can fix. Rows that are only already
+// in the database need no fixing.
+export function hasRowsToFix(result: ValidationResult): boolean {
+  return result.errors.some((error) => error.type !== ALREADY_STORED);
+}
+
 // Throws if the backend cannot be reached or cannot process the file at all.
 export async function validateOnBackend(file: File): Promise<ValidationResult> {
   const body = new FormData();

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestValidateForImport(t *testing.T) {
+func TestValidateWithStored(t *testing.T) {
 	// Assets already in the database have no line number.
 	stored := []asset{
 		{id: "SS-1", assetType: "SUBSTATION", name: "North", status: "IN_SERVICE"},
@@ -88,7 +88,7 @@ func TestValidateForImport(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := validateForImport(tc.incoming, tc.existing)
+			got := validateWithStored(tc.incoming, tc.existing)
 			if !slices.Equal(got, tc.want) {
 				t.Errorf("unexpected errors\n got: %s\nwant: %s", describe(got), describe(tc.want))
 			}

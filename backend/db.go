@@ -15,7 +15,7 @@ const defaultDatabaseURL = "postgres://localhost:5432/smartgrid?sslmode=disable"
 var db *sql.DB
 
 // openDatabase prepares the connection pool. It does not connect yet, so the
-// server still starts, and can validate files, when PostgreSQL is down.
+// server still starts when PostgreSQL is down.
 func openDatabase() (*sql.DB, error) {
 	url := os.Getenv("DATABASE_URL")
 	if url == "" {
@@ -24,10 +24,15 @@ func openDatabase() (*sql.DB, error) {
 	return sql.Open("postgres", url)
 }
 
+// querier is satisfied by both the connection pool and a transaction.
+type querier interface {
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+}
+
 // loadExistingAssets returns the fields of every stored asset that
 // validation needs. Their line is 0 because they are not in the upload.
-func loadExistingAssets(ctx context.Context, tx *sql.Tx) ([]asset, error) {
-	rows, err := tx.QueryContext(ctx, `
+func loadExistingAssets(ctx context.Context, q querier) ([]asset, error) {
+	rows, err := q.QueryContext(ctx, `
 		SELECT asset_id, COALESCE(parent_asset_id, ''), asset_type, asset_name, operational_status
 		FROM assets`)
 	if err != nil {

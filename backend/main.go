@@ -68,7 +68,15 @@ func handleValidate(w http.ResponseWriter, r *http.Request) {
 	}
 	header, assets := upload.header, upload.assets
 
-	errs := validateAssets(assets)
+	// Check against the database as well, so that rows which could not be
+	// committed are reported now rather than when committing.
+	existing, err := loadExistingAssets(r.Context(), db)
+	if err != nil {
+		writeError(w, http.StatusServiceUnavailable, "the database is not available: "+err.Error())
+		return
+	}
+
+	errs := validateWithStored(assets, existing)
 	validFile, invalidFile, err := buildCSVFiles(upload.filename, header, assets, errs, time.Now())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "the result files could not be generated: "+err.Error())

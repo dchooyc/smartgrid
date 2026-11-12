@@ -4,7 +4,7 @@ import { download } from "../lib/download";
 
 type GeneratedFilesProps = {
   validFile: GeneratedFile;
-  invalidFile?: GeneratedFile; // left out when no rows have errors
+  invalidFile?: GeneratedFile; // left out when no rows need fixing
 };
 
 export default function GeneratedFiles({

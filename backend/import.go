@@ -41,7 +41,7 @@ func handleImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if errs := validateForImport(assets, existing); len(errs) > 0 {
+	if errs := validateWithStored(assets, existing); len(errs) > 0 {
 		writeJSON(w, http.StatusUnprocessableEntity, importResponse{
 			Errors: errs,
 			Error:  fmt.Sprintf("validation failed with %d errors, so nothing was committed", len(errs)),
@@ -65,10 +65,10 @@ func handleImport(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// validateForImport runs every validation on the incoming rows, treating the
+// validateWithStored runs every validation on the incoming rows, treating the
 // assets already in the database as part of the hierarchy, and rejects rows
-// whose ID is already stored.
-func validateForImport(incoming, existing []asset) []validationError {
+// whose ID is already stored. Both validating and importing use it.
+func validateWithStored(incoming, existing []asset) []validationError {
 	incomingIDs := assetsByID(incoming)
 
 	// Stored assets take part in validation so that parents can be found in

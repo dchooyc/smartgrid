@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   commitValidRows,
+  hasRowsToFix,
   type CommitResult,
   type ValidationResult,
 } from "../lib/api";
@@ -23,9 +24,11 @@ export default function CommitRows({ result, onReset }: CommitRowsProps) {
 
   const outcome = commit.state === "done" ? commit.result : null;
   const committed = outcome?.committed === true;
-  const hasInvalidRows = result.errors.length > 0;
+  const hasInvalidRows = hasRowsToFix(result);
   const linesWithErrors = new Set(result.errors.map((error) => error.line)).size;
   const hasValidRows = result.totalRows > linesWithErrors;
+  // e.g. every row is already in the database: nothing to commit or fix.
+  const nothingToDo = !hasValidRows && !hasInvalidRows;
 
   async function handleCommit() {
     setCommit({ state: "submitting" });
@@ -69,19 +72,20 @@ export default function CommitRows({ result, onReset }: CommitRowsProps) {
       )}
 
       {outcome?.committed === true && (
-        <>
-          <p className="font-medium text-accent">
-            Process completed successfully! {outcome.rowsCommitted} rows
-            committed.
-          </p>
-          <button
-            type="button"
-            onClick={handleUploadAnother}
-            className="cursor-pointer rounded-full border border-foreground bg-background px-6 py-3 text-base font-semibold text-foreground transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
-            Upload Another CSV
-          </button>
-        </>
+        <p className="font-medium text-accent">
+          Process completed successfully! {outcome.rowsCommitted} rows
+          committed.
+        </p>
+      )}
+
+      {(committed || nothingToDo) && (
+        <button
+          type="button"
+          onClick={handleUploadAnother}
+          className="cursor-pointer rounded-full border border-foreground bg-background px-6 py-3 text-base font-semibold text-foreground transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          Upload Another CSV
+        </button>
       )}
 
       <ConfirmDownloadDialog
