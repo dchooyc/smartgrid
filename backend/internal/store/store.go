@@ -103,6 +103,56 @@ func loadAssets(ctx context.Context, q querier) ([]asset.Asset, error) {
 	return assets, rows.Err()
 }
 
+// ListAssets returns every stored asset, ordered by ID. A non-empty assetType
+// limits the list to assets of that type.
+func (s *Store) ListAssets(ctx context.Context, assetType string) ([]asset.Stored, error) {
+	if assetType == "" {
+		return s.queryAssets(ctx, "")
+	}
+	return s.queryAssets(ctx, "WHERE asset_type = $1", assetType)
+}
+
+// GetAsset returns the asset with the given ID, or nil if there is none.
+func (s *Store) GetAsset(ctx context.Context, id string) (*asset.Stored, error) {
+	assets, err := s.queryAssets(ctx, "WHERE asset_id = $1", id)
+	if err != nil || len(assets) == 0 {
+		return nil, err
+	}
+	return &assets[0], nil
+}
+
+// ListChildren returns the assets whose direct parent has the given ID.
+func (s *Store) ListChildren(ctx context.Context, parentID string) ([]asset.Stored, error) {
+	return s.queryAssets(ctx, "WHERE parent_asset_id = $1", parentID)
+}
+
+// queryAssets selects whole assets. The condition is an optional WHERE clause.
+func (s *Store) queryAssets(ctx context.Context, condition string, args ...any) ([]asset.Stored, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT asset_id, parent_asset_id, asset_type, asset_name, operational_status,
+			voltage_kv, rating_kva, manufacturer, model, serial_number,
+			commissioned_date::text, created_at
+		FROM assets `+condition+`
+		ORDER BY asset_id`, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	assets := []asset.Stored{}
+	for rows.Next() {
+		var a asset.Stored
+		err := rows.Scan(&a.ID, &a.ParentID, &a.Type, &a.Name, &a.Status,
+			&a.VoltageKV, &a.RatingKVA, &a.Manufacturer, &a.Model, &a.SerialNumber,
+			&a.CommissionedDate, &a.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		assets = append(assets, a)
+	}
+	return assets, rows.Err()
+}
+
 // nullable stores an empty CSV value as NULL.
 func nullable(value string) sql.NullString {
 	return sql.NullString{String: value, Valid: value != ""}

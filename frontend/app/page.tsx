@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CsvUpload } from "@/components/uploads";
 
 export default function Home() {
@@ -6,6 +7,9 @@ export default function Home() {
       <main className="flex flex-1 w-full max-w-3xl flex-col gap-8 py-16 px-6 bg-background sm:px-16">
         <div className="text-2xl font-semibold text-foreground">{"Smart Grid"}</div>
         <CsvUpload />
+        <Link href="/assets" className="self-start text-accent underline">
+          View stored assets
+        </Link>
       </main>
     </div>
   );

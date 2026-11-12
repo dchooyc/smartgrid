@@ -22,9 +22,6 @@ type upload struct {
 // readUpload reads and parses the CSV in the request's "file" field. If the
 // file cannot be used it writes the error response and returns false.
 func readUpload(w http.ResponseWriter, r *http.Request) (upload, bool) {
-	// Let the frontend, which runs on a different port, read the response.
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
 	file, fileHeader, err := r.FormFile("file")
 	if err != nil {

@@ -1,5 +1,5 @@
-// A minimal backend that validates uploaded asset CSV files and commits the
-// valid rows to PostgreSQL.
+// A minimal backend that validates uploaded asset CSV files, commits the
+// valid rows to PostgreSQL and serves the stored assets.
 package main
 
 import (
@@ -32,6 +32,14 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/validate", handler.Validate)
 	mux.HandleFunc("POST /api/imports", handler.Import)
+
+	mux.HandleFunc("GET /api/assets", handler.ListAssets)
+	mux.HandleFunc("GET /api/assets/{assetId}", handler.GetAsset)
+	mux.HandleFunc("GET /api/substations", handler.ListAssetsOfType("SUBSTATION"))
+	mux.HandleFunc("GET /api/transformers", handler.ListAssetsOfType("TRANSFORMER"))
+	mux.HandleFunc("GET /api/lv-boards", handler.ListAssetsOfType("LV_BOARD"))
+	mux.HandleFunc("GET /api/switchboards", handler.ListAssetsOfType("SWITCHBOARD"))
+	mux.HandleFunc("GET /api/switchboard-panels", handler.ListAssetsOfType("SWITCHBOARD_PANEL"))
 
 	log.Printf("listening on %s", addr)
 	log.Fatal(http.ListenAndServe(addr, mux))
