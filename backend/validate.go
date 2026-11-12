@@ -255,7 +255,7 @@ func checkHierarchy(assets []asset) []validationError {
 		// Substations and unsupported types are reported by earlier checks.
 		wanted := permittedParent[a.assetType]
 		if wanted != "" && parent.assetType != wanted {
-			errs = append(errs, newError(a, "is a %s, so its parent must be a %s, but %s is a %s.",
+			errs = append(errs, newError(a, "is a %s, so its parent must be a %s, but %s %s.",
 				a.assetType, wanted, parent.id, describeType(parent)))
 		}
 
@@ -284,7 +284,7 @@ func rootProblem(a asset, byID map[string]asset) string {
 	}
 
 	if current.assetType != substation {
-		return fmt.Sprintf("its top-level ancestor %s is a %s", current.id, describeType(current))
+		return fmt.Sprintf("its top-level ancestor %s %s", current.id, describeType(current))
 	}
 	return ""
 }
@@ -339,11 +339,12 @@ func newError(a asset, format string, args ...any) validationError {
 	}
 }
 
+// describeType completes a sentence about an asset, e.g. "X is a SWITCHBOARD".
 func describeType(a asset) string {
 	if a.assetType == "" {
-		return "asset with no type"
+		return "has no asset_type"
 	}
-	return a.assetType
+	return "is a " + a.assetType
 }
 
 func isDate(value string) bool {
