@@ -45,3 +45,33 @@ export async function validateOnBackend(file: File): Promise<ValidationResult> {
     invalidFile: result.invalid_file,
   };
 }
+
+export type CommitResult =
+  | { committed: true; rowsCommitted: number }
+  | { committed: false; message: string; errors: ValidationIssue[] };
+
+// Sends the valid rows to be validated again and saved to the database.
+export async function commitValidRows(file: GeneratedFile): Promise<CommitResult> {
+  const body = new FormData();
+  body.append("file", new Blob([file.content], { type: "text/csv" }), file.name);
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/api/imports`, { method: "POST", body });
+  } catch {
+    return failed("Could not reach the backend. Is it running?");
+  }
+
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !result?.committed) {
+    return failed(
+      result?.error ?? `The backend returned an error (${response.status}).`,
+      result?.errors,
+    );
+  }
+  return { committed: true, rowsCommitted: result.rows_committed };
+}
+
+function failed(message: string, errors: ValidationIssue[] = []): CommitResult {
+  return { committed: false, message, errors };
+}

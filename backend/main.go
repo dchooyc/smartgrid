@@ -1,4 +1,5 @@
-// A minimal backend that validates uploaded asset CSV files.
+// A minimal backend that validates uploaded asset CSV files and commits the
+// valid rows to PostgreSQL.
 package main
 
 import (
@@ -45,59 +46,30 @@ type validateResponse struct {
 	// ValidFile holds the rows without errors and InvalidFile the rest.
 	ValidFile   *csvFile `json:"valid_file,omitempty"`
 	InvalidFile *csvFile `json:"invalid_file,omitempty"`
-	// Error is set when the file itself could not be processed.
-	Error string `json:"error,omitempty"`
 }
 
 func main() {
+	var err error
+	if db, err = openDatabase(); err != nil {
+		log.Fatal(err)
+	}
+
 	http.HandleFunc("POST /api/validate", handleValidate)
+	http.HandleFunc("POST /api/imports", handleImport)
 
 	log.Printf("listening on %s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 func handleValidate(w http.ResponseWriter, r *http.Request) {
-	// Let the frontend, which runs on a different port, read the response.
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
-	file, upload, err := r.FormFile("file")
-	if err != nil {
-		var tooLarge *http.MaxBytesError
-		if errors.As(err, &tooLarge) {
-			writeError(w, http.StatusRequestEntityTooLarge, "the file is larger than 10 MB")
-			return
-		}
-		writeError(w, http.StatusBadRequest, `no CSV file was uploaded in the "file" field`)
+	upload, ok := readUpload(w, r)
+	if !ok {
 		return
 	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-
-	header, err := reader.Read()
-	if err == io.EOF {
-		writeError(w, http.StatusBadRequest, "the file is empty")
-		return
-	}
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "the file could not be read as CSV: "+err.Error())
-		return
-	}
-	columns := cleanHeader(header)
-	if err := checkColumns(columns); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	assets, err := readAssets(reader, columns)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "the file could not be read as CSV: "+err.Error())
-		return
-	}
+	header, assets := upload.header, upload.assets
 
 	errs := validateAssets(assets)
-	validFile, invalidFile, err := buildCSVFiles(upload.Filename, header, assets, errs, time.Now())
+	validFile, invalidFile, err := buildCSVFiles(upload.filename, header, assets, errs, time.Now())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "the result files could not be generated: "+err.Error())
 		return
@@ -111,6 +83,58 @@ func handleValidate(w http.ResponseWriter, r *http.Request) {
 		ValidFile:   &validFile,
 		InvalidFile: &invalidFile,
 	})
+}
+
+// upload is a CSV file received from the frontend.
+type upload struct {
+	filename string
+	header   []string // as it appears in the file
+	assets   []asset
+}
+
+// readUpload reads and parses the CSV in the request's "file" field. If the
+// file cannot be used it writes the error response and returns false.
+func readUpload(w http.ResponseWriter, r *http.Request) (upload, bool) {
+	// Let the frontend, which runs on a different port, read the response.
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
+	file, fileHeader, err := r.FormFile("file")
+	if err != nil {
+		var tooLarge *http.MaxBytesError
+		if errors.As(err, &tooLarge) {
+			writeError(w, http.StatusRequestEntityTooLarge, "the file is larger than 10 MB")
+			return upload{}, false
+		}
+		writeError(w, http.StatusBadRequest, `no CSV file was uploaded in the "file" field`)
+		return upload{}, false
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+
+	header, err := reader.Read()
+	if err == io.EOF {
+		writeError(w, http.StatusBadRequest, "the file is empty")
+		return upload{}, false
+	}
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "the file could not be read as CSV: "+err.Error())
+		return upload{}, false
+	}
+	columns := cleanHeader(header)
+	if err := checkColumns(columns); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return upload{}, false
+	}
+
+	assets, err := readAssets(reader, columns)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "the file could not be read as CSV: "+err.Error())
+		return upload{}, false
+	}
+
+	return upload{filename: fileHeader.Filename, header: header, assets: assets}, true
 }
 
 // cleanHeader trims the column titles and drops the byte-order mark that
@@ -150,6 +174,8 @@ func readAssets(reader *csv.Reader, columns []string) ([]asset, error) {
 			status:           field("operational_status"),
 			voltageKV:        field("voltage_kv"),
 			ratingKVA:        field("rating_kva"),
+			manufacturer:     field("manufacturer"),
+			model:            field("model"),
 			serialNumber:     field("serial_number"),
 			commissionedDate: field("commissioned_date"),
 			record:           record,
@@ -191,15 +217,15 @@ func checkColumns(columns []string) error {
 	return nil
 }
 
+// writeError reports that a request failed before producing any result.
 func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, validateResponse{
-		Errors:   []validationError{},
-		Warnings: []validationError{},
-		Error:    message,
+	writeJSON(w, status, map[string]any{
+		"error":  message,
+		"errors": []validationError{},
 	})
 }
 
-func writeJSON(w http.ResponseWriter, status int, body validateResponse) {
+func writeJSON(w http.ResponseWriter, status int, body any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(body)

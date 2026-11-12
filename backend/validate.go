@@ -36,6 +36,8 @@ type asset struct {
 	status           string
 	voltageKV        string
 	ratingKVA        string
+	manufacturer     string
+	model            string
 	serialNumber     string
 	commissionedDate string
 	record           []string // the original row, unmodified
@@ -364,12 +366,17 @@ func describeType(a asset) string {
 }
 
 func isDate(value string) bool {
+	_, ok := parseDate(value)
+	return ok
+}
+
+func parseDate(value string) (time.Time, bool) {
 	for _, layout := range dateLayouts {
-		if _, err := time.Parse(layout, value); err == nil {
-			return true
+		if date, err := time.Parse(layout, value); err == nil {
+			return date, true
 		}
 	}
-	return false
+	return time.Time{}, false
 }
 
 func parseNumber(value string) (float64, bool) {

@@ -1,4 +1,5 @@
 import type { ValidationResult } from "../lib/api";
+import CommitRows from "./commit-rows";
 import GeneratedFiles from "./generated-files";
 import ValidationReport from "./validation-report";
 
@@ -10,9 +11,13 @@ export type BackendStatus =
 
 type ValidationStatusProps = {
   status: BackendStatus;
+  onReset: () => void; // clears the upload so another file can be chosen
 };
 
-export default function ValidationStatus({ status }: ValidationStatusProps) {
+export default function ValidationStatus({
+  status,
+  onReset,
+}: ValidationStatusProps) {
   // empty:hidden avoids a gap when there is nothing to show.
   return (
     <div
@@ -33,6 +38,7 @@ export default function ValidationStatus({ status }: ValidationStatusProps) {
                 : undefined
             }
           />
+          <CommitRows result={status.result} onReset={onReset} />
         </>
       )}
       {status.state === "error" && (

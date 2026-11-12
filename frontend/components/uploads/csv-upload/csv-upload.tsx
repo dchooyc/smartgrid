@@ -75,7 +75,7 @@ export default function CsvUpload() {
         Validate
       </button>
 
-      <ValidationStatus status={status} />
+      <ValidationStatus status={status} onReset={handleRemove} />
 
       <MessageDialog message={message} onClose={() => setMessage(null)} />
     </div>

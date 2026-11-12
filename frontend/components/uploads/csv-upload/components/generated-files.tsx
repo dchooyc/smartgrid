@@ -1,5 +1,6 @@
 import { FaCircleCheck } from "react-icons/fa6";
 import type { GeneratedFile } from "../lib/api";
+import { download } from "../lib/download";
 
 type GeneratedFilesProps = {
   validFile: GeneratedFile;
@@ -46,16 +47,4 @@ function FileRow({ file, color, children }: FileRowProps) {
       </button>
     </li>
   );
-}
-
-// Saves the file through a temporary link, since the content is already in memory.
-function download(file: GeneratedFile) {
-  const url = URL.createObjectURL(
-    new Blob([file.content], { type: "text/csv;charset=utf-8" }),
-  );
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = file.name;
-  link.click();
-  URL.revokeObjectURL(url);
 }
