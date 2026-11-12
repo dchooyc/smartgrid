@@ -40,6 +40,7 @@ type validateResponse struct {
 	Valid     bool              `json:"valid"`
 	TotalRows int               `json:"total_rows"`
 	Errors    []validationError `json:"errors"`
+	Warnings  []validationError `json:"warnings"`
 	// Error is set when the file itself could not be processed.
 	Error string `json:"error,omitempty"`
 }
@@ -96,6 +97,7 @@ func handleValidate(w http.ResponseWriter, r *http.Request) {
 		Valid:     len(errs) == 0,
 		TotalRows: len(assets),
 		Errors:    errs,
+		Warnings:  findWarnings(assets),
 	})
 }
 
@@ -136,6 +138,7 @@ func readAssets(reader *csv.Reader, columns []string) ([]asset, error) {
 			status:           field("operational_status"),
 			voltageKV:        field("voltage_kv"),
 			ratingKVA:        field("rating_kva"),
+			serialNumber:     field("serial_number"),
 			commissionedDate: field("commissioned_date"),
 		})
 	}
@@ -176,7 +179,11 @@ func checkColumns(columns []string) error {
 }
 
 func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, validateResponse{Errors: []validationError{}, Error: message})
+	writeJSON(w, status, validateResponse{
+		Errors:   []validationError{},
+		Warnings: []validationError{},
+		Error:    message,
+	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, body validateResponse) {

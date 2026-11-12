@@ -46,12 +46,8 @@ export default function CsvUpload() {
 
     setStatus({ state: "loading" });
     try {
-      const { totalRows, errors } = await validateOnBackend(file);
-      setStatus(
-        errors.length > 0
-          ? { state: "invalid", errors }
-          : { state: "success", rowCount: totalRows },
-      );
+      const result = await validateOnBackend(file);
+      setStatus({ state: "done", result });
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       setStatus({ state: "error", message: reason });

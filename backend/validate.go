@@ -36,9 +36,11 @@ type asset struct {
 	status           string
 	voltageKV        string
 	ratingKVA        string
+	serialNumber     string
 	commissionedDate string
 }
 
+// validationError describes a problem with one row. Warnings use it too.
 type validationError struct {
 	Line    int    `json:"line"`
 	AssetID string `json:"asset_id,omitempty"`
@@ -63,6 +65,12 @@ func validateAssets(assets []asset) []validationError {
 		errs = append(errs, check(assets)...)
 	}
 	return errs
+}
+
+// findWarnings returns problems worth flagging that do not fail validation.
+func findWarnings(assets []asset) []validationError {
+	warnings := []validationError{}
+	return append(warnings, checkDuplicateSerials(assets)...)
 }
 
 // 1. asset_id, asset_type and asset_name cannot be empty.
@@ -279,6 +287,32 @@ func rootProblem(a asset, byID map[string]asset) string {
 		return fmt.Sprintf("its top-level ancestor %s is a %s", current.id, describeType(current))
 	}
 	return ""
+}
+
+// Warning: every row that shares its serial_number with another row.
+func checkDuplicateSerials(assets []asset) []validationError {
+	linesBySerial := map[string][]int{}
+	for _, a := range assets {
+		if a.serialNumber != "" {
+			linesBySerial[a.serialNumber] = append(linesBySerial[a.serialNumber], a.line)
+		}
+	}
+
+	var warnings []validationError
+	for _, a := range assets {
+		lines := linesBySerial[a.serialNumber]
+		if len(lines) < 2 {
+			continue
+		}
+		var others []string
+		for _, line := range lines {
+			if line != a.line {
+				others = append(others, strconv.Itoa(line))
+			}
+		}
+		warnings = append(warnings, newError(a, "has duplicate serial_number %s, also used on line %s.", a.serialNumber, strings.Join(others, ", ")))
+	}
+	return warnings
 }
 
 // assetsByID indexes assets by ID. If an ID is duplicated, the first row wins.
