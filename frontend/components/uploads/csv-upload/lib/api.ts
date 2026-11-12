@@ -1,6 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 export type ValidationIssue = {
+  type: string; // the kind of problem, e.g. "Duplicate asset IDs"
   line: number;
   message: string;
 };

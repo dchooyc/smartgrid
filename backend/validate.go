@@ -42,27 +42,32 @@ type asset struct {
 
 // validationError describes a problem with one row. Warnings use it too.
 type validationError struct {
+	Type    string `json:"type"` // the kind of problem, set by validateAssets
 	Line    int    `json:"line"`
 	AssetID string `json:"asset_id,omitempty"`
 	Message string `json:"message"`
 }
 
 // checks are the validations, in the order they run.
-var checks = []func([]asset) []validationError{
-	checkRequiredFields,
-	checkUniqueIDs,
-	checkSupportedValues,
-	checkDatesAndNumbers,
-	checkParentRequirements,
-	checkCycles,
-	checkHierarchy,
+var checks = []struct {
+	errorType string
+	run       func([]asset) []validationError
+}{
+	{"Missing required fields", checkRequiredFields},
+	{"Duplicate asset IDs", checkUniqueIDs},
+	{"Unsupported values", checkSupportedValues},
+	{"Invalid dates and numbers", checkDatesAndNumbers},
+	{"Parent requirements", checkParentRequirements},
+	{"Circular relationships", checkCycles},
+	{"Invalid hierarchy", checkHierarchy},
 }
 
-// validateAssets runs every check and returns all the errors found.
+// validateAssets runs every check and returns all the errors found, each
+// labelled with the type of the check that found it.
 func validateAssets(assets []asset) []validationError {
 	errs := []validationError{}
 	for _, check := range checks {
-		errs = append(errs, check(assets)...)
+		errs = append(errs, withType(check.errorType, check.run(assets))...)
 	}
 	return errs
 }
@@ -70,7 +75,14 @@ func validateAssets(assets []asset) []validationError {
 // findWarnings returns problems worth flagging that do not fail validation.
 func findWarnings(assets []asset) []validationError {
 	warnings := []validationError{}
-	return append(warnings, checkDuplicateSerials(assets)...)
+	return append(warnings, withType("Duplicate serial numbers", checkDuplicateSerials(assets))...)
+}
+
+func withType(errorType string, errs []validationError) []validationError {
+	for i := range errs {
+		errs[i].Type = errorType
+	}
+	return errs
 }
 
 // 1. asset_id, asset_type and asset_name cannot be empty.

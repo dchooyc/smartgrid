@@ -134,7 +134,7 @@ Keep each validation function independent and easy to test. Avoid unnecessary de
 |-----|-------------------------|--------------------|
 | Day 0 | Read requirements, planning, setup | 2 hours |
 | Day 1 | Upload csv, backend | 3 hours |
-| Day 2 | TBD | TBD |
+| Day 2 | Validation, | TBD |
 | Day 3 |TBD | TBD |
 | Day 4 | TBD | TBD |
 | Day 5 | TBD | TBD |
