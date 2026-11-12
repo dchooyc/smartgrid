@@ -1,4 +1,4 @@
-package main
+package asset
 
 import (
 	"fmt"
@@ -26,26 +26,9 @@ var supportedStatuses = []string{"IN_SERVICE", "MAINTENANCE", "OUT_OF_SERVICE"}
 // Dates are day/month/year, with a two- or four-digit year.
 var dateLayouts = []string{"2/1/06", "2/1/2006"}
 
-// asset is one data row of the CSV, with surrounding spaces trimmed.
-type asset struct {
-	line             int // line number in the CSV file
-	id               string
-	parentID         string
-	assetType        string
-	name             string
-	status           string
-	voltageKV        string
-	ratingKVA        string
-	manufacturer     string
-	model            string
-	serialNumber     string
-	commissionedDate string
-	record           []string // the original row, unmodified
-}
-
-// validationError describes a problem with one row. Warnings use it too.
-type validationError struct {
-	Type    string `json:"type"`  // the kind of problem, set by validateAssets
+// ValidationError describes a problem with one row. Warnings use it too.
+type ValidationError struct {
+	Type    string `json:"type"`  // the kind of problem, set by Validate
 	Label   string `json:"label"` // short name, e.g. "Missing Parent"
 	Line    int    `json:"line"`
 	AssetID string `json:"asset_id,omitempty"`
@@ -55,7 +38,7 @@ type validationError struct {
 // checks are the validations, in the order they run.
 var checks = []struct {
 	errorType string
-	run       func([]asset) []validationError
+	run       func([]Asset) []ValidationError
 }{
 	{"Missing required fields", checkRequiredFields},
 	{"Duplicate asset IDs", checkUniqueIDs},
@@ -66,23 +49,23 @@ var checks = []struct {
 	{"Invalid hierarchy", checkHierarchy},
 }
 
-// validateAssets runs every check and returns all the errors found, each
+// Validate runs every check and returns all the errors found, each
 // labelled with the type of the check that found it.
-func validateAssets(assets []asset) []validationError {
-	errs := []validationError{}
+func Validate(assets []Asset) []ValidationError {
+	errs := []ValidationError{}
 	for _, check := range checks {
 		errs = append(errs, withType(check.errorType, check.run(assets))...)
 	}
 	return errs
 }
 
-// findWarnings returns problems worth flagging that do not fail validation.
-func findWarnings(assets []asset) []validationError {
-	warnings := []validationError{}
+// FindWarnings returns problems worth flagging that do not fail validation.
+func FindWarnings(assets []Asset) []ValidationError {
+	warnings := []ValidationError{}
 	return append(warnings, withType("Duplicate serial numbers", checkDuplicateSerials(assets))...)
 }
 
-func withType(errorType string, errs []validationError) []validationError {
+func withType(errorType string, errs []ValidationError) []ValidationError {
 	for i := range errs {
 		errs[i].Type = errorType
 	}
@@ -90,16 +73,16 @@ func withType(errorType string, errs []validationError) []validationError {
 }
 
 // 1. asset_id, asset_type and asset_name cannot be empty.
-func checkRequiredFields(assets []asset) []validationError {
-	var errs []validationError
+func checkRequiredFields(assets []Asset) []ValidationError {
+	var errs []ValidationError
 	for _, a := range assets {
-		if a.id == "" {
+		if a.ID == "" {
 			errs = append(errs, newError(a, "Missing Asset ID", "is missing asset_id."))
 		}
-		if a.assetType == "" {
+		if a.Type == "" {
 			errs = append(errs, newError(a, "Missing Asset Type", "is missing asset_type."))
 		}
-		if a.name == "" {
+		if a.Name == "" {
 			errs = append(errs, newError(a, "Missing Asset Name", "is missing asset_name."))
 		}
 	}
@@ -107,23 +90,23 @@ func checkRequiredFields(assets []asset) []validationError {
 }
 
 // 2. Every row that shares its asset_id with another row is reported.
-func checkUniqueIDs(assets []asset) []validationError {
+func checkUniqueIDs(assets []Asset) []ValidationError {
 	linesByID := map[string][]int{}
 	for _, a := range assets {
-		if a.id != "" {
-			linesByID[a.id] = append(linesByID[a.id], a.line)
+		if a.ID != "" {
+			linesByID[a.ID] = append(linesByID[a.ID], a.Line)
 		}
 	}
 
-	var errs []validationError
+	var errs []ValidationError
 	for _, a := range assets {
-		lines := linesByID[a.id]
+		lines := linesByID[a.ID]
 		if len(lines) < 2 {
 			continue
 		}
 		var others []string
 		for _, line := range lines {
-			if line != a.line {
+			if line != a.Line {
 				others = append(others, strconv.Itoa(line))
 			}
 		}
@@ -133,15 +116,15 @@ func checkUniqueIDs(assets []asset) []validationError {
 }
 
 // 3. Asset types and operational statuses must be supported values.
-func checkSupportedValues(assets []asset) []validationError {
-	var errs []validationError
+func checkSupportedValues(assets []Asset) []ValidationError {
+	var errs []ValidationError
 	for _, a := range assets {
 		// A missing type is already reported by checkRequiredFields.
-		if _, supported := permittedParent[a.assetType]; !supported && a.assetType != "" {
-			errs = append(errs, newError(a, "Invalid Asset Type", "has unsupported asset_type %q.", a.assetType))
+		if _, supported := permittedParent[a.Type]; !supported && a.Type != "" {
+			errs = append(errs, newError(a, "Invalid Asset Type", "has unsupported asset_type %q.", a.Type))
 		}
-		if !slices.Contains(supportedStatuses, a.status) {
-			errs = append(errs, newError(a, "Invalid Status", "has unsupported operational_status %q.", a.status))
+		if !slices.Contains(supportedStatuses, a.Status) {
+			errs = append(errs, newError(a, "Invalid Status", "has unsupported operational_status %q.", a.Status))
 		}
 	}
 	return errs
@@ -149,23 +132,23 @@ func checkSupportedValues(assets []asset) []validationError {
 
 // 4. Dates and numbers must be readable when present, and rating_kva cannot
 // be negative.
-func checkDatesAndNumbers(assets []asset) []validationError {
-	var errs []validationError
+func checkDatesAndNumbers(assets []Asset) []ValidationError {
+	var errs []ValidationError
 	for _, a := range assets {
-		if a.commissionedDate != "" && !isDate(a.commissionedDate) {
-			errs = append(errs, newError(a, "Invalid Date", "has invalid commissioned_date %q (expected day/month/year, e.g. 15/2/09).", a.commissionedDate))
+		if a.CommissionedDate != "" && !isDate(a.CommissionedDate) {
+			errs = append(errs, newError(a, "Invalid Date", "has invalid commissioned_date %q (expected day/month/year, e.g. 15/2/09).", a.CommissionedDate))
 		}
-		if a.voltageKV != "" {
-			if _, ok := parseNumber(a.voltageKV); !ok {
-				errs = append(errs, newError(a, "Invalid Voltage", "has non-numeric voltage_kv %q.", a.voltageKV))
+		if a.VoltageKV != "" {
+			if _, ok := ParseNumber(a.VoltageKV); !ok {
+				errs = append(errs, newError(a, "Invalid Voltage", "has non-numeric voltage_kv %q.", a.VoltageKV))
 			}
 		}
-		if a.ratingKVA != "" {
-			rating, ok := parseNumber(a.ratingKVA)
+		if a.RatingKVA != "" {
+			rating, ok := ParseNumber(a.RatingKVA)
 			if !ok {
-				errs = append(errs, newError(a, "Invalid Rating", "has non-numeric rating_kva %q.", a.ratingKVA))
+				errs = append(errs, newError(a, "Invalid Rating", "has non-numeric rating_kva %q.", a.RatingKVA))
 			} else if rating < 0 {
-				errs = append(errs, newError(a, "Negative Rating", "has negative rating_kva %s.", a.ratingKVA))
+				errs = append(errs, newError(a, "Negative Rating", "has negative rating_kva %s.", a.RatingKVA))
 			}
 		}
 	}
@@ -173,13 +156,13 @@ func checkDatesAndNumbers(assets []asset) []validationError {
 }
 
 // 5. Substations cannot have a parent; every other asset must have one.
-func checkParentRequirements(assets []asset) []validationError {
-	var errs []validationError
+func checkParentRequirements(assets []Asset) []ValidationError {
+	var errs []ValidationError
 	for _, a := range assets {
 		switch {
-		case a.assetType == substation && a.parentID != "":
-			errs = append(errs, newError(a, "Substation Has Parent", "is a substation and cannot have a parent (%s).", a.parentID))
-		case a.assetType != substation && a.assetType != "" && a.parentID == "":
+		case a.Type == substation && a.ParentID != "":
+			errs = append(errs, newError(a, "Substation Has Parent", "is a substation and cannot have a parent (%s).", a.ParentID))
+		case a.Type != substation && a.Type != "" && a.ParentID == "":
 			errs = append(errs, newError(a, "Missing Parent", "has no parent; only substations can be without one."))
 		}
 	}
@@ -187,26 +170,26 @@ func checkParentRequirements(assets []asset) []validationError {
 }
 
 // 6. An asset cannot be its own parent or its own ancestor.
-func checkCycles(assets []asset) []validationError {
+func checkCycles(assets []Asset) []ValidationError {
 	byID := assetsByID(assets)
 
 	// cycles maps each asset ID that is part of a loop to the IDs in that loop.
 	cycles := map[string][]string{}
 	state := map[string]visitState{}
 	for _, a := range assets {
-		if a.id == "" || state[a.id] != unvisited {
+		if a.ID == "" || state[a.ID] != unvisited {
 			continue
 		}
-		cycle := findCycle(a.id, byID, state, nil)
+		cycle := findCycle(a.ID, byID, state, nil)
 		for _, id := range cycle {
 			cycles[id] = cycle
 		}
 	}
 
-	var errs []validationError
+	var errs []ValidationError
 	for _, a := range assets {
-		cycle, inCycle := cycles[a.id]
-		if !inCycle || byID[a.id].line != a.line {
+		cycle, inCycle := cycles[a.ID]
+		if !inCycle || byID[a.ID].Line != a.Line {
 			continue
 		}
 		if len(cycle) == 1 {
@@ -214,8 +197,8 @@ func checkCycles(assets []asset) []validationError {
 			continue
 		}
 		// Show the loop starting and ending at this asset.
-		start := slices.Index(cycle, a.id)
-		loop := slices.Concat(cycle[start:], cycle[:start], []string{a.id})
+		start := slices.Index(cycle, a.ID)
+		loop := slices.Concat(cycle[start:], cycle[:start], []string{a.ID})
 		errs = append(errs, newError(a, "Cycle Detected", "is in a circular parent relationship: %s.", strings.Join(loop, " → ")))
 	}
 	return errs
@@ -231,12 +214,12 @@ const (
 
 // findCycle is a depth-first search up the parent chain from id. It returns
 // the IDs forming a loop if the chain runs back into the current path, or nil.
-func findCycle(id string, byID map[string]asset, state map[string]visitState, path []string) []string {
+func findCycle(id string, byID map[string]Asset, state map[string]visitState, path []string) []string {
 	state[id] = visiting
 	defer func() { state[id] = visited }()
 	path = append(path, id)
 
-	parentID := byID[id].parentID
+	parentID := byID[id].ParentID
 	if _, exists := byID[parentID]; !exists {
 		return nil
 	}
@@ -253,26 +236,26 @@ func findCycle(id string, byID map[string]asset, state map[string]visitState, pa
 
 // 7. Every parent must exist, be of the permitted type, and lead up to a
 // substation.
-func checkHierarchy(assets []asset) []validationError {
+func checkHierarchy(assets []Asset) []ValidationError {
 	byID := assetsByID(assets)
 
-	var errs []validationError
+	var errs []ValidationError
 	for _, a := range assets {
-		if a.parentID == "" {
+		if a.ParentID == "" {
 			continue // checkParentRequirements covers assets without a parent
 		}
 
-		parent, exists := byID[a.parentID]
+		parent, exists := byID[a.ParentID]
 		if !exists {
-			errs = append(errs, newError(a, "Parent Not Found", "has parent %s, which does not exist in the file.", a.parentID))
+			errs = append(errs, newError(a, "Parent Not Found", "has parent %s, which does not exist in the file.", a.ParentID))
 			continue
 		}
 
 		// Substations and unsupported types are reported by earlier checks.
-		wanted := permittedParent[a.assetType]
-		if wanted != "" && parent.assetType != wanted {
+		wanted := permittedParent[a.Type]
+		if wanted != "" && parent.Type != wanted {
 			errs = append(errs, newError(a, "Invalid Parent Type", "is a %s, so its parent must be a %s, but %s %s.",
-				a.assetType, wanted, parent.id, describeType(parent)))
+				a.Type, wanted, parent.ID, describeType(parent)))
 		}
 
 		if problem := rootProblem(a, byID); problem != "" {
@@ -284,93 +267,82 @@ func checkHierarchy(assets []asset) []validationError {
 
 // rootProblem follows a's parents to the top of the hierarchy. It returns ""
 // if that ends at a substation, or the reason it does not.
-func rootProblem(a asset, byID map[string]asset) string {
-	seen := map[string]bool{a.id: true}
+func rootProblem(a Asset, byID map[string]Asset) string {
+	seen := map[string]bool{a.ID: true}
 	current := a
-	for current.parentID != "" {
-		parent, exists := byID[current.parentID]
+	for current.ParentID != "" {
+		parent, exists := byID[current.ParentID]
 		if !exists {
-			return fmt.Sprintf("its ancestor %s has a parent that does not exist", current.id)
+			return fmt.Sprintf("its ancestor %s has a parent that does not exist", current.ID)
 		}
-		if seen[parent.id] {
+		if seen[parent.ID] {
 			return "its parent chain is circular"
 		}
-		seen[parent.id] = true
+		seen[parent.ID] = true
 		current = parent
 	}
 
-	if current.assetType != substation {
-		return fmt.Sprintf("its top-level ancestor %s %s", current.id, describeType(current))
+	if current.Type != substation {
+		return fmt.Sprintf("its top-level ancestor %s %s", current.ID, describeType(current))
 	}
 	return ""
 }
 
 // Warning: every row that shares its serial_number with another row.
-func checkDuplicateSerials(assets []asset) []validationError {
+func checkDuplicateSerials(assets []Asset) []ValidationError {
 	linesBySerial := map[string][]int{}
 	for _, a := range assets {
-		if a.serialNumber != "" {
-			linesBySerial[a.serialNumber] = append(linesBySerial[a.serialNumber], a.line)
+		if a.SerialNumber != "" {
+			linesBySerial[a.SerialNumber] = append(linesBySerial[a.SerialNumber], a.Line)
 		}
 	}
 
-	var warnings []validationError
+	var warnings []ValidationError
 	for _, a := range assets {
-		lines := linesBySerial[a.serialNumber]
+		lines := linesBySerial[a.SerialNumber]
 		if len(lines) < 2 {
 			continue
 		}
 		var others []string
 		for _, line := range lines {
-			if line != a.line {
+			if line != a.Line {
 				others = append(others, strconv.Itoa(line))
 			}
 		}
-		warnings = append(warnings, newError(a, "Duplicate Serial", "has duplicate serial_number %s, also used on line %s.", a.serialNumber, strings.Join(others, ", ")))
+		warnings = append(warnings, newError(a, "Duplicate Serial", "has duplicate serial_number %s, also used on line %s.", a.SerialNumber, strings.Join(others, ", ")))
 	}
 	return warnings
 }
 
-// assetsByID indexes assets by ID. If an ID is duplicated, the first row wins.
-func assetsByID(assets []asset) map[string]asset {
-	byID := map[string]asset{}
-	for _, a := range assets {
-		if _, taken := byID[a.id]; a.id != "" && !taken {
-			byID[a.id] = a
-		}
-	}
-	return byID
-}
-
 // newError builds an error whose message starts by naming the asset. The
 // label is a short name for the problem, e.g. "Missing Parent".
-func newError(a asset, label, format string, args ...any) validationError {
+func newError(a Asset, label, format string, args ...any) ValidationError {
 	name := "This asset"
-	if a.id != "" {
-		name = "Asset " + a.id
+	if a.ID != "" {
+		name = "Asset " + a.ID
 	}
-	return validationError{
+	return ValidationError{
 		Label:   label,
-		Line:    a.line,
-		AssetID: a.id,
+		Line:    a.Line,
+		AssetID: a.ID,
 		Message: name + " " + fmt.Sprintf(format, args...),
 	}
 }
 
 // describeType completes a sentence about an asset, e.g. "X is a SWITCHBOARD".
-func describeType(a asset) string {
-	if a.assetType == "" {
+func describeType(a Asset) string {
+	if a.Type == "" {
 		return "has no asset_type"
 	}
-	return "is a " + a.assetType
+	return "is a " + a.Type
 }
 
 func isDate(value string) bool {
-	_, ok := parseDate(value)
+	_, ok := ParseDate(value)
 	return ok
 }
 
-func parseDate(value string) (time.Time, bool) {
+func ParseDate(value string) (time.Time, bool) {
 	for _, layout := range dateLayouts {
 		if date, err := time.Parse(layout, value); err == nil {
 			return date, true
@@ -379,7 +351,7 @@ func parseDate(value string) (time.Time, bool) {
 	return time.Time{}, false
 }
 
-func parseNumber(value string) (float64, bool) {
+func ParseNumber(value string) (float64, bool) {
 	number, err := strconv.ParseFloat(value, 64)
 	if err != nil || math.IsNaN(number) || math.IsInf(number, 0) {
 		return 0, false

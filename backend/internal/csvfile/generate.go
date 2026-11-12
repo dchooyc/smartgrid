@@ -1,4 +1,4 @@
-package main
+package csvfile
 
 import (
 	"bytes"
@@ -7,21 +7,23 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"smartgrid/backend/internal/asset"
 )
 
 const errorsColumn = "Validation Errors (Remove Before Reimporting)"
 
-// csvFile is a generated CSV, held in memory and sent to the frontend.
-type csvFile struct {
+// File is a generated CSV, held in memory and sent to the frontend.
+type File struct {
 	Name    string `json:"name"`
 	Content string `json:"content"`
 }
 
-// buildCSVFiles splits the uploaded rows into two CSV files using the errors
+// BuildFiles splits the uploaded rows into two CSV files using the errors
 // validation already found: rows without errors go to the valid file, and the
 // rest go to the invalid file with their error labels in a new first column.
 // Every row lands in exactly one file, in its original order.
-func buildCSVFiles(originalName string, header []string, assets []asset, errs []validationError, now time.Time) (valid, invalid csvFile, err error) {
+func BuildFiles(originalName string, header []string, assets []asset.Asset, errs []asset.ValidationError, now time.Time) (valid, invalid File, err error) {
 	labels := labelsByLine(errs)
 
 	// Excel puts a byte-order mark in front of the first title.
@@ -31,11 +33,11 @@ func buildCSVFiles(originalName string, header []string, assets []asset, errs []
 	validRows := [][]string{header}
 	invalidRows := [][]string{slices.Concat([]string{errorsColumn}, header)}
 	for _, a := range assets {
-		if rowLabels, hasErrors := labels[a.line]; hasErrors {
+		if rowLabels, hasErrors := labels[a.Line]; hasErrors {
 			errorsCell := strings.Join(rowLabels, "; ")
-			invalidRows = append(invalidRows, slices.Concat([]string{errorsCell}, a.record))
+			invalidRows = append(invalidRows, slices.Concat([]string{errorsCell}, a.Record))
 		} else {
-			validRows = append(validRows, a.record)
+			validRows = append(validRows, a.Record)
 		}
 	}
 
@@ -59,7 +61,7 @@ func buildCSVFiles(originalName string, header []string, assets []asset, errs []
 
 // labelsByLine lists the distinct error labels for each CSV line, in the
 // order the errors were found.
-func labelsByLine(errs []validationError) map[int][]string {
+func labelsByLine(errs []asset.ValidationError) map[int][]string {
 	labels := map[int][]string{}
 	for _, e := range errs {
 		if !slices.Contains(labels[e.Line], e.Label) {

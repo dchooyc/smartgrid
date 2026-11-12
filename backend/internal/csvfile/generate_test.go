@@ -1,29 +1,31 @@
-package main
+package csvfile
 
 import (
 	"testing"
 	"time"
+
+	"smartgrid/backend/internal/asset"
 )
 
-func TestBuildCSVFiles(t *testing.T) {
+func TestBuildFiles(t *testing.T) {
 	header := []string{"asset_id", "parent_asset_id", "asset_name"}
 	now := time.Date(2026, time.January, 15, 9, 30, 5, 0, time.UTC)
 
 	t.Run("splits rows between the two files in their original order", func(t *testing.T) {
-		assets := []asset{
-			{line: 2, record: []string{"SS-1", "", "North, Main"}},
-			{line: 3, record: []string{"TX-1", "SS-404", " T1 "}},
-			{line: 4, record: []string{"TX-2", "SS-1", "T2"}},
-			{line: 5, record: []string{"", "TX-9", ""}},
+		assets := []asset.Asset{
+			{Line: 2, Record: []string{"SS-1", "", "North, Main"}},
+			{Line: 3, Record: []string{"TX-1", "SS-404", " T1 "}},
+			{Line: 4, Record: []string{"TX-2", "SS-1", "T2"}},
+			{Line: 5, Record: []string{"", "TX-9", ""}},
 		}
-		errs := []validationError{
+		errs := []asset.ValidationError{
 			{Line: 5, Label: "Missing Asset ID"},
 			{Line: 3, Label: "Parent Not Found"},
 			{Line: 5, Label: "Missing Asset Name"},
 			{Line: 5, Label: "Missing Asset ID"}, // repeated labels are listed once
 		}
 
-		valid, invalid, err := buildCSVFiles("grid_assets.csv", header, assets, errs, now)
+		valid, invalid, err := BuildFiles("grid_assets.csv", header, assets, errs, now)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -50,9 +52,9 @@ func TestBuildCSVFiles(t *testing.T) {
 	})
 
 	t.Run("no errors gives a header-only invalid file", func(t *testing.T) {
-		assets := []asset{{line: 2, record: []string{"SS-1", "", "North"}}}
+		assets := []asset.Asset{{Line: 2, Record: []string{"SS-1", "", "North"}}}
 
-		valid, invalid, err := buildCSVFiles("assets.CSV", header, assets, nil, now)
+		valid, invalid, err := BuildFiles("assets.CSV", header, assets, nil, now)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -69,10 +71,10 @@ func TestBuildCSVFiles(t *testing.T) {
 	})
 
 	t.Run("no valid rows gives a header-only valid file", func(t *testing.T) {
-		assets := []asset{{line: 2, record: []string{"", "", ""}}}
-		errs := []validationError{{Line: 2, Label: "Missing Asset ID"}}
+		assets := []asset.Asset{{Line: 2, Record: []string{"", "", ""}}}
+		errs := []asset.ValidationError{{Line: 2, Label: "Missing Asset ID"}}
 
-		valid, _, err := buildCSVFiles("assets.csv", header, assets, errs, now)
+		valid, _, err := BuildFiles("assets.csv", header, assets, errs, now)
 		if err != nil {
 			t.Fatal(err)
 		}
