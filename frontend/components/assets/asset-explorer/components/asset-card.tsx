@@ -1,29 +1,11 @@
 import type { ReactNode } from "react";
-import type { IconType } from "react-icons";
-import { LuInspectionPanel, LuPlug, LuUtilityPole } from "react-icons/lu";
-import { TbCircuitInductor, TbCircuitSwitchOpen } from "react-icons/tb";
 import type { Asset } from "../lib/api";
 import { statusLabel } from "../lib/fields";
+import { TYPE_ICONS } from "../lib/type-icons";
 import StatusIcon from "./status-icon";
 
-// A faint icon for each asset type, shown in the corner of its cards. The
-// shapes do not all fill their box, so each has a nudge that rests its
-// bottom edge on the card's last line of text.
-const TYPE_ICONS: Record<string, { Icon: IconType; nudge: string }> = {
-  // where the power lines arrive
-  SUBSTATION: { Icon: LuUtilityPole, nudge: "" },
-  // the coil symbol from circuit diagrams
-  TRANSFORMER: { Icon: TbCircuitInductor, nudge: "translate-y-[11px]" },
-  // low voltage, ready to use
-  LV_BOARD: { Icon: LuPlug, nudge: "" },
-  // the switch symbol from circuit diagrams
-  SWITCHBOARD: { Icon: TbCircuitSwitchOpen, nudge: "translate-y-[11px]" },
-  // one panel of a switchboard
-  SWITCHBOARD_PANEL: { Icon: LuInspectionPanel, nudge: "translate-y-px" },
-};
-
-// Likewise, a nudge that puts the top of each status icon level with the top
-// of the card's first line of text.
+// A nudge for each status icon whose shape does not fill its box, putting its
+// top level with the top of the card's first line of text.
 const STATUS_NUDGES: Record<string, string> = {
   IN_SERVICE: "-translate-y-[3px]",
   OUT_OF_SERVICE: "-translate-y-[3px]",

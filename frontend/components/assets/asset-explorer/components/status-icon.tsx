@@ -7,6 +7,9 @@ const STATUS_ICONS: Record<string, { Icon: IconType; color: string }> = {
   OUT_OF_SERVICE: { Icon: FaXmark, color: "text-red-600" },
 };
 
+// The statuses that have an icon, from working to not.
+export const STATUSES = Object.keys(STATUS_ICONS);
+
 type StatusIconProps = {
   status: string;
   className?: string; // replaces the default size, which suits a line of text
