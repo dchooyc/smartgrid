@@ -3,6 +3,7 @@ import { fetchAssets } from "../lib/api";
 import { assetPath } from "../lib/fields";
 import type { AssetListing } from "../lib/types";
 import { useLoaded } from "../lib/use-loaded";
+import AssetCard from "./asset-card";
 import AssetFields from "./asset-fields";
 
 export default function AssetList({ listing }: { listing: AssetListing }) {
@@ -21,16 +22,18 @@ export default function AssetList({ listing }: { listing: AssetListing }) {
   return (
     <>
       <p className="text-muted">{assets.data.length} {listing.title}</p>
-      <ul className="flex flex-col divide-y divide-border">
+      <ul className="flex flex-col gap-4">
         {assets.data.map((asset) => (
-          <li key={asset.asset_id} className="flex flex-col gap-2 py-4">
-            <AssetFields asset={asset} skipEmpty />
-            <Link
-              href={assetPath(asset.asset_id)}
-              className="self-start text-accent underline"
-            >
-              View details
-            </Link>
+          <li key={asset.asset_id}>
+            <AssetCard assetType={asset.asset_type}>
+              <AssetFields asset={asset} skipEmpty />
+              <Link
+                href={assetPath(asset.asset_id)}
+                className="self-start text-accent underline"
+              >
+                View details
+              </Link>
+            </AssetCard>
           </li>
         ))}
       </ul>

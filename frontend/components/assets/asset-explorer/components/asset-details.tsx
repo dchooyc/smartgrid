@@ -2,6 +2,7 @@ import Link from "next/link";
 import { fetchAssetDetails, type Asset } from "../lib/api";
 import { assetPath } from "../lib/fields";
 import { useLoaded } from "../lib/use-loaded";
+import AssetCard from "./asset-card";
 import AssetFields from "./asset-fields";
 
 export default function AssetDetails({ assetId }: { assetId: string }) {
@@ -19,7 +20,9 @@ export default function AssetDetails({ assetId }: { assetId: string }) {
     <>
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Details</h2>
-        <AssetFields asset={asset} />
+        <AssetCard assetType={asset.asset_type}>
+          <AssetFields asset={asset} />
+        </AssetCard>
       </section>
 
       <section className="flex flex-col gap-2">
