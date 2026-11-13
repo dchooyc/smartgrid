@@ -14,10 +14,12 @@ const (
 	// maxPageSize is the most assets one request can ask for with "limit".
 	maxPageSize = 100
 
-	// cacheAssets lets the browser reuse an asset response for 30 minutes
-	// without asking again. The frontend changes its request URLs when it
-	// commits new rows, so its own imports show up at once.
-	cacheAssets = "private, max-age=1800"
+	// cacheAssets lets the browser reuse an asset response for 10 seconds
+	// without asking again: long enough to absorb repeated refreshes, short
+	// enough that data changed elsewhere shows up almost at once. The
+	// frontend changes its request URLs when it commits new rows, so its own
+	// imports show up immediately.
+	cacheAssets = "private, max-age=10"
 )
 
 type assetListResponse struct {
