@@ -1,11 +1,15 @@
 import type { Asset } from "./api";
 
 // The asset fields, in the order they are displayed.
-export const ASSET_FIELDS: { key: keyof Asset; label: string }[] = [
-  { key: "asset_id", label: "Asset ID" },
+export const ASSET_FIELDS: {
+  key: keyof Asset;
+  label: string;
+  required?: boolean; // every asset has a value for it
+}[] = [
+  { key: "asset_id", label: "Asset ID", required: true },
   { key: "parent_asset_id", label: "Parent asset ID" },
-  { key: "asset_type", label: "Type" },
-  { key: "asset_name", label: "Name" },
+  { key: "asset_type", label: "Type", required: true },
+  { key: "asset_name", label: "Name", required: true },
   { key: "operational_status", label: "Status" },
   { key: "voltage_kv", label: "Voltage (kV)" },
   { key: "rating_kva", label: "Rating (kVA)" },
@@ -18,4 +22,10 @@ export const ASSET_FIELDS: { key: keyof Asset; label: string }[] = [
 
 export function assetPath(assetId: string): string {
   return `/assets/${encodeURIComponent(assetId)}`;
+}
+
+// Writes a status as ordinary words, e.g. "OUT_OF_SERVICE" as "Out of service".
+export function statusLabel(status: string): string {
+  const words = status.replaceAll("_", " ").toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }

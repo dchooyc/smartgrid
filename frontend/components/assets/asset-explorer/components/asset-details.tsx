@@ -4,6 +4,7 @@ import { assetPath } from "../lib/fields";
 import { useLoaded } from "../lib/use-loaded";
 import AssetCard from "./asset-card";
 import AssetFields from "./asset-fields";
+import StatusIcon from "./status-icon";
 
 export default function AssetDetails({ assetId }: { assetId: string }) {
   const details = useLoaded(() => fetchAssetDetails(assetId));
@@ -20,7 +21,7 @@ export default function AssetDetails({ assetId }: { assetId: string }) {
     <>
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Details</h2>
-        <AssetCard assetType={asset.asset_type}>
+        <AssetCard asset={asset}>
           <AssetFields asset={asset} />
         </AssetCard>
       </section>
@@ -59,7 +60,8 @@ function RelatedAsset({ asset }: { asset: Asset }) {
       <Link href={assetPath(asset.asset_id)} className="text-accent underline">
         {asset.asset_id}
       </Link>
-      {` · ${asset.asset_type} · ${asset.asset_name} · ${asset.operational_status}`}
+      {` · ${asset.asset_type} · ${asset.asset_name} · ${asset.operational_status} `}
+      <StatusIcon status={asset.operational_status} />
     </p>
   );
 }

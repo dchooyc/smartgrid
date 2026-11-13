@@ -25,7 +25,7 @@ export default function AssetList({ listing }: { listing: AssetListing }) {
       <ul className="flex flex-col gap-4">
         {assets.data.map((asset) => (
           <li key={asset.asset_id}>
-            <AssetCard assetType={asset.asset_type}>
+            <AssetCard asset={asset}>
               <AssetFields asset={asset} skipEmpty />
               <Link
                 href={assetPath(asset.asset_id)}
