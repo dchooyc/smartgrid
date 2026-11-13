@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AssetDetails, AssetList } from "./components";
+import { AssetDetails, AssetList, RefreshData } from "./components";
 import { ALL_ASSETS, TYPE_LISTINGS, findTypeListing } from "./lib/types";
 
 type AssetExplorerProps = {
@@ -22,7 +22,10 @@ export default function AssetExplorer({ assetId, assetType }: AssetExplorerProps
 
     return (
       <div className="flex flex-col gap-4 text-foreground">
-        <h1 className="text-2xl font-semibold">{listing.title}</h1>
+        <div className="flex items-baseline justify-between gap-4">
+          <h1 className="text-2xl font-semibold">{listing.title}</h1>
+          <RefreshData />
+        </div>
         <nav className="flex flex-wrap gap-x-4 gap-y-1">
           {[ALL_ASSETS, ...TYPE_LISTINGS].map(({ path, title }) =>
             path === listing.path ? (
@@ -46,7 +49,10 @@ export default function AssetExplorer({ assetId, assetType }: AssetExplorerProps
       <Link href="/assets" className="self-start text-accent underline">
         All assets
       </Link>
-      <h1 className="text-2xl font-semibold">Asset {assetId}</h1>
+      <div className="flex items-baseline justify-between gap-4">
+        <h1 className="text-2xl font-semibold">Asset {assetId}</h1>
+        <RefreshData />
+      </div>
       {/* The key reloads the details when another asset is selected. */}
       <AssetDetails key={assetId} assetId={assetId} />
     </div>

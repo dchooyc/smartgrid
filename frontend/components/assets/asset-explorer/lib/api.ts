@@ -1,3 +1,5 @@
+import { dataVersion } from "@/lib/data-version";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 // An asset as the backend stores it. Fields with no stored value are null.
@@ -70,7 +72,11 @@ export async function fetchAssetDetails(
 async function get(path: string) {
   let response: Response;
   try {
-    response = await fetch(`${API_URL}${path}`);
+    // The data version keeps the browser from reusing a response it kept
+    // from before the stored assets last changed.
+    const url = new URL(API_URL + path);
+    url.searchParams.set("v", dataVersion());
+    response = await fetch(url);
   } catch {
     throw new Error("Could not reach the backend. Is it running?");
   }

@@ -1,3 +1,5 @@
+import { bumpDataVersion } from "@/lib/data-version";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 export type ValidationIssue = {
@@ -78,6 +80,7 @@ export async function commitValidRows(file: GeneratedFile): Promise<CommitResult
       result?.errors,
     );
   }
+  bumpDataVersion(); // the asset pages must not show what the browser kept
   return { committed: true, rowsCommitted: result.rows_committed };
 }
 

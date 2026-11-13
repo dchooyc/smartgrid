@@ -10,8 +10,15 @@ import (
 	"smartgrid/backend/internal/asset"
 )
 
-// maxPageSize is the most assets one request can ask for with "limit".
-const maxPageSize = 100
+const (
+	// maxPageSize is the most assets one request can ask for with "limit".
+	maxPageSize = 100
+
+	// cacheAssets lets the browser reuse an asset response for 30 minutes
+	// without asking again. The frontend changes its request URLs when it
+	// commits new rows, so its own imports show up at once.
+	cacheAssets = "private, max-age=1800"
+)
 
 type assetListResponse struct {
 	Assets []asset.Stored `json:"assets"`
@@ -86,6 +93,7 @@ func (h *Handler) listAssets(w http.ResponseWriter, r *http.Request, assetType s
 		response.Assets = assets[:limit]
 		response.NextAfter = &assets[limit-1].ID
 	}
+	w.Header().Set("Cache-Control", cacheAssets)
 	writeJSON(w, http.StatusOK, response)
 }
 
@@ -113,5 +121,6 @@ func (h *Handler) GetAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Cache-Control", cacheAssets)
 	writeJSON(w, http.StatusOK, assetDetailsResponse{Asset: *found, Parent: parent, Children: children})
 }
