@@ -22,12 +22,47 @@ export type AssetDetails = {
   children: Asset[]; // immediate children only
 };
 
-// Fetches a list of assets, e.g. from "/api/assets" or "/api/substations".
-export async function fetchAssets(apiPath: string): Promise<Asset[]> {
-  return (await get(apiPath)).assets;
+// How many assets a list has, however many of them have been fetched.
+export type AssetCounts = {
+  total: number;
+  byType: Record<string, number>;
+  byStatus: Record<string, number>;
+};
+
+export type AssetPage = {
+  assets: Asset[];
+  counts: AssetCounts;
+  nextAfter: string | null; // fetches the next page; null on the last one
+};
+
+// About seven screens of cards: enough that the next page is fetched long
+// before the reader gets there, and small enough to arrive at once.
+export const PAGE_SIZE = 20;
+
+// Fetches one page of a list of assets, e.g. from "/api/assets" or
+// "/api/substations", starting after the previous page's nextAfter.
+export async function fetchAssetPage(
+  apiPath: string,
+  after?: string,
+): Promise<AssetPage> {
+  const query = new URLSearchParams({ limit: String(PAGE_SIZE) });
+  if (after) query.set("after", after);
+
+  const result = await get(`${apiPath}?${query}`);
+  return {
+    assets: result.assets,
+    counts: {
+      total: result.counts.total,
+      byType: result.counts.by_type,
+      byStatus: result.counts.by_status,
+    },
+    nextAfter: result.next_after,
+  };
 }
 
-export async function fetchAssetDetails(assetId: string): Promise<AssetDetails> {
+export async function fetchAssetDetails(
+  assetId: string,
+): Promise<AssetDetails> {
   return get(`/api/assets/${encodeURIComponent(assetId)}`);
 }
 

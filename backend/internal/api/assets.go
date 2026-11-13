@@ -4,13 +4,22 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 
 	"smartgrid/backend/internal/asset"
 )
 
+// maxPageSize is the most assets one request can ask for with "limit".
+const maxPageSize = 100
+
 type assetListResponse struct {
 	Assets []asset.Stored `json:"assets"`
+	// Counts covers the whole list, not just the assets returned.
+	Counts asset.Counts `json:"counts"`
+	// NextAfter is the "after" value that fetches the rest of the list, or
+	// null when this response reaches its end.
+	NextAfter *string `json:"next_after"`
 }
 
 type assetDetailsResponse struct {
@@ -19,8 +28,12 @@ type assetDetailsResponse struct {
 	Children []asset.Stored `json:"children"` // immediate children only
 }
 
-// ListAssets returns every stored asset, or only those of the type given in
+// ListAssets returns the stored assets, or only those of the type given in
 // the optional "type" query parameter.
+//
+// The list can be read a page at a time: "limit" caps how many assets are
+// returned and "after" continues from the asset ID given in the previous
+// response's next_after. Without a limit, every asset is returned.
 func (h *Handler) ListAssets(w http.ResponseWriter, r *http.Request) {
 	h.listAssets(w, r, r.URL.Query().Get("type"))
 }
@@ -43,12 +56,37 @@ func (h *Handler) listAssets(w http.ResponseWriter, r *http.Request, assetType s
 		return
 	}
 
-	assets, err := h.store.ListAssets(r.Context(), assetType)
+	query := r.URL.Query()
+	limit := 0
+	if value := query.Get("limit"); value != "" {
+		var err error
+		if limit, err = strconv.Atoi(value); err != nil || limit < 1 || limit > maxPageSize {
+			writeError(w, http.StatusBadRequest, fmt.Sprintf("limit must be a whole number from 1 to %d", maxPageSize))
+			return
+		}
+	}
+
+	// One asset more than the limit is fetched, to learn whether more follow.
+	fetch := limit
+	if limit > 0 {
+		fetch = limit + 1
+	}
+	assets, err := h.store.ListAssets(r.Context(), assetType, query.Get("after"), fetch)
+	var counts asset.Counts
+	if err == nil {
+		counts, err = h.store.CountAssets(r.Context(), assetType)
+	}
 	if err != nil {
 		writeError(w, http.StatusServiceUnavailable, "the database is not available: "+err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, assetListResponse{Assets: assets})
+
+	response := assetListResponse{Assets: assets, Counts: counts}
+	if limit > 0 && len(assets) > limit {
+		response.Assets = assets[:limit]
+		response.NextAfter = &assets[limit-1].ID
+	}
+	writeJSON(w, http.StatusOK, response)
 }
 
 // GetAsset returns one asset with its direct parent and immediate children.

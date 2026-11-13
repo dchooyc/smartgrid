@@ -4,7 +4,9 @@ package store
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strconv"
+	"strings"
 
 	_ "github.com/lib/pq" // PostgreSQL driver
 
@@ -103,18 +105,59 @@ func loadAssets(ctx context.Context, q querier) ([]asset.Asset, error) {
 	return assets, rows.Err()
 }
 
-// ListAssets returns every stored asset, ordered by ID. A non-empty assetType
-// limits the list to assets of that type.
-func (s *Store) ListAssets(ctx context.Context, assetType string) ([]asset.Stored, error) {
-	if assetType == "" {
-		return s.queryAssets(ctx, "")
+// ListAssets returns stored assets, ordered by ID. A non-empty assetType
+// keeps only assets of that type, a non-empty after keeps only assets whose
+// ID comes after it, and a limit above zero caps how many are returned.
+func (s *Store) ListAssets(ctx context.Context, assetType, after string, limit int) ([]asset.Stored, error) {
+	var conditions []string
+	var args []any
+	if assetType != "" {
+		args = append(args, assetType)
+		conditions = append(conditions, fmt.Sprintf("asset_type = $%d", len(args)))
 	}
-	return s.queryAssets(ctx, "WHERE asset_type = $1", assetType)
+	if after != "" {
+		args = append(args, after)
+		conditions = append(conditions, fmt.Sprintf("asset_id > $%d", len(args)))
+	}
+
+	condition := ""
+	if len(conditions) > 0 {
+		condition = "WHERE " + strings.Join(conditions, " AND ")
+	}
+	return s.queryAssets(ctx, condition, limit, args...)
+}
+
+// CountAssets counts the stored assets, or only those of a non-empty
+// assetType.
+func (s *Store) CountAssets(ctx context.Context, assetType string) (asset.Counts, error) {
+	counts := asset.Counts{ByType: map[string]int{}, ByStatus: map[string]int{}}
+
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT asset_type, operational_status, count(*)
+		FROM assets
+		WHERE $1 = '' OR asset_type = $1
+		GROUP BY asset_type, operational_status`, assetType)
+	if err != nil {
+		return counts, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var foundType, status string
+		var count int
+		if err := rows.Scan(&foundType, &status, &count); err != nil {
+			return counts, err
+		}
+		counts.Total += count
+		counts.ByType[foundType] += count
+		counts.ByStatus[status] += count
+	}
+	return counts, rows.Err()
 }
 
 // GetAsset returns the asset with the given ID, or nil if there is none.
 func (s *Store) GetAsset(ctx context.Context, id string) (*asset.Stored, error) {
-	assets, err := s.queryAssets(ctx, "WHERE asset_id = $1", id)
+	assets, err := s.queryAssets(ctx, "WHERE asset_id = $1", 0, id)
 	if err != nil || len(assets) == 0 {
 		return nil, err
 	}
@@ -123,17 +166,22 @@ func (s *Store) GetAsset(ctx context.Context, id string) (*asset.Stored, error) 
 
 // ListChildren returns the assets whose direct parent has the given ID.
 func (s *Store) ListChildren(ctx context.Context, parentID string) ([]asset.Stored, error) {
-	return s.queryAssets(ctx, "WHERE parent_asset_id = $1", parentID)
+	return s.queryAssets(ctx, "WHERE parent_asset_id = $1", 0, parentID)
 }
 
-// queryAssets selects whole assets. The condition is an optional WHERE clause.
-func (s *Store) queryAssets(ctx context.Context, condition string, args ...any) ([]asset.Stored, error) {
+// queryAssets selects whole assets. The condition is an optional WHERE clause
+// and a limit above zero caps the number of rows.
+func (s *Store) queryAssets(ctx context.Context, condition string, limit int, args ...any) ([]asset.Stored, error) {
+	limitClause := ""
+	if limit > 0 {
+		limitClause = fmt.Sprintf("LIMIT %d", limit)
+	}
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT asset_id, parent_asset_id, asset_type, asset_name, operational_status,
 			voltage_kv, rating_kva, manufacturer, model, serial_number,
 			commissioned_date::text, created_at
 		FROM assets `+condition+`
-		ORDER BY asset_id`, args...)
+		ORDER BY asset_id `+limitClause, args...)
 	if err != nil {
 		return nil, err
 	}

@@ -53,6 +53,14 @@ type Stored struct {
 	CreatedAt        time.Time `json:"created_at"`
 }
 
+// Counts says how many stored assets there are, in total and of each type
+// and status.
+type Counts struct {
+	Total    int            `json:"total"`
+	ByType   map[string]int `json:"by_type"`
+	ByStatus map[string]int `json:"by_status"`
+}
+
 // SupportedTypes lists the asset types, in alphabetical order.
 func SupportedTypes() []string {
 	return slices.Sorted(maps.Keys(permittedParent))

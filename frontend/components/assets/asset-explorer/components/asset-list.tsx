@@ -1,23 +1,45 @@
+import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { fetchAssets } from "../lib/api";
+import { PAGE_SIZE } from "../lib/api";
 import { assetPath } from "../lib/fields";
 import { ALL_ASSETS, type AssetListing } from "../lib/types";
-import { useLoaded } from "../lib/use-loaded";
+import { useAssetPages } from "../lib/use-asset-pages";
 import AssetCard from "./asset-card";
 import AssetFields from "./asset-fields";
 import StatusCounts from "./status-counts";
 import TypeCounts from "./type-counts";
 
-export default function AssetList({ listing }: { listing: AssetListing }) {
-  const assets = useLoaded(() => fetchAssets(listing.apiPath));
+// The next page is fetched when the reader comes within about two screens of
+// the end of the list, so that it is in place before they reach it.
+const LOAD_AHEAD = "1500px";
 
-  if (assets.state === "loading") {
-    return <p className="text-muted">Loading {listing.title}...</p>;
+export default function AssetList({ listing }: { listing: AssetListing }) {
+  const { assets, counts, nextAfter, loading, error, loadMore } = useAssetPages(
+    listing.apiPath,
+  );
+  const end = useRef<HTMLDivElement>(null);
+
+  // Watches for the end of the list coming near. It is set up afresh after
+  // every page, which also covers a page too short to push the end away.
+  useEffect(() => {
+    if (!end.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => entry.isIntersecting && loadMore(),
+      { rootMargin: `${LOAD_AHEAD} 0px` },
+    );
+    observer.observe(end.current);
+    return () => observer.disconnect();
+  });
+
+  if (!counts) {
+    return error ? (
+      <p className="font-medium text-red-700">{error}</p>
+    ) : (
+      <p className="text-muted">Loading {listing.title}...</p>
+    );
   }
-  if (assets.state === "error") {
-    return <p className="font-medium text-red-700">{assets.message}</p>;
-  }
-  if (assets.data.length === 0) {
+  if (counts.total === 0) {
     return <p className="text-muted">There are no {listing.title} yet.</p>;
   }
 
@@ -25,16 +47,16 @@ export default function AssetList({ listing }: { listing: AssetListing }) {
     <>
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-muted">
         <p>
-          {assets.data.length} {listing.title}
+          {counts.total} {listing.title}
         </p>
         {listing === ALL_ASSETS ? (
-          <TypeCounts assets={assets.data} />
+          <TypeCounts counts={counts.byType} />
         ) : (
-          <StatusCounts assets={assets.data} />
+          <StatusCounts counts={counts.byStatus} />
         )}
       </div>
       <ul className="flex flex-col gap-4">
-        {assets.data.map((asset) => (
+        {assets.map((asset) => (
           <li key={asset.asset_id}>
             <AssetCard asset={asset}>
               <AssetFields asset={asset} skipEmpty />
@@ -48,6 +70,29 @@ export default function AssetList({ listing }: { listing: AssetListing }) {
           </li>
         ))}
       </ul>
+
+      {error ? (
+        <p className="text-center text-sm text-red-700">
+          {error}{" "}
+          <button
+            type="button"
+            onClick={loadMore}
+            className="cursor-pointer text-accent underline"
+          >
+            Try again
+          </button>
+        </p>
+      ) : nextAfter !== null ? (
+        <div ref={end} className="h-5 text-center text-sm text-muted/85">
+          {loading && `Loading more ${listing.title}...`}
+        </div>
+      ) : (
+        assets.length > PAGE_SIZE && (
+          <p className="text-center text-sm text-muted/85">
+            All {counts.total} {listing.title} shown
+          </p>
+        )
+      )}
     </>
   );
 }

@@ -1,8 +1,11 @@
-import type { Asset } from "../lib/api";
 import { TYPE_ICONS } from "../lib/type-icons";
 
 // How many of the assets there are of each type, as an icon and a number.
-export default function TypeCounts({ assets }: { assets: Asset[] }) {
+export default function TypeCounts({
+  counts,
+}: {
+  counts: Record<string, number>;
+}) {
   return (
     <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm tabular-nums text-muted/85">
       {Object.entries(TYPE_ICONS).map(([assetType, { Icon }]) => (
@@ -13,7 +16,7 @@ export default function TypeCounts({ assets }: { assets: Asset[] }) {
         >
           <Icon aria-hidden className="size-4 opacity-70" />
           <span className="sr-only">{assetType}</span>
-          {assets.filter((asset) => asset.asset_type === assetType).length}
+          {counts[assetType] ?? 0}
         </li>
       ))}
     </ul>
