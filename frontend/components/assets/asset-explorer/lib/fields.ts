@@ -1,10 +1,12 @@
 import type { Asset } from "./api";
+import { formatDate, formatTimestamp } from "./dates";
 
 // The asset fields, in the order they are displayed.
 export const ASSET_FIELDS: {
   key: keyof Asset;
   label: string;
   required?: boolean; // every asset has a value for it
+  format?: (value: string) => string; // how its value is displayed
 }[] = [
   { key: "asset_id", label: "Asset ID", required: true },
   { key: "parent_asset_id", label: "Parent asset ID" },
@@ -16,8 +18,8 @@ export const ASSET_FIELDS: {
   { key: "manufacturer", label: "Manufacturer" },
   { key: "model", label: "Model" },
   { key: "serial_number", label: "Serial number" },
-  { key: "commissioned_date", label: "Commissioned date" },
-  { key: "created_at", label: "Created at" },
+  { key: "commissioned_date", label: "Commissioned date", format: formatDate },
+  { key: "created_at", label: "Created at", format: formatTimestamp },
 ];
 
 export function assetPath(assetId: string): string {

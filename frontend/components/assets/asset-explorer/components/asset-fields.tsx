@@ -14,12 +14,17 @@ export default function AssetFields({ asset, skipEmpty }: AssetFieldsProps) {
 
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-      {fields.map(({ key, label, required }) => (
-        <div key={key} className="col-span-2 grid grid-cols-subgrid">
-          <dt className="text-muted">{label}</dt>
-          <dd className={valueStyle(key, required)}>{asset[key] ?? "—"}</dd>
-        </div>
-      ))}
+      {fields.map(({ key, label, required, format }) => {
+        const value = asset[key];
+        return (
+          <div key={key} className="col-span-2 grid grid-cols-subgrid">
+            <dt className="text-muted">{label}</dt>
+            <dd className={valueStyle(key, required)}>
+              {value === null ? "—" : format ? format(String(value)) : value}
+            </dd>
+          </div>
+        );
+      })}
     </dl>
   );
 }
