@@ -123,6 +123,8 @@ Keep each validation function independent and easy to test. Avoid unnecessary de
 ## Rejected suggestions and why
 1. In the csv upload component it's check that the file is a csv only checked that it ends with .csv. I prompted for a better check as files can be mistakenly named. While these "simpler" validations can be made on the backend, my intention is to catch errors early and reduce unneccessary calls to the backend. I also prompted for missing/ duplicate columns checks.
 
+2. I prompted for paths for each asset type and the agent produced a new page on the frontend for each asset type /substations, /transformers and so on. I then prompted for dynamic paths under /asset-type/[assetType] instead as the pages contained the same code.
+
 ## Reviewing and verification of generated code
 
 ## What the agent did poorly
@@ -134,8 +136,10 @@ Keep each validation function independent and easy to test. Avoid unnecessary de
 |-----|-------------------------|--------------------|
 | Day 0 | Read requirements, planning, setup | 2 hours |
 | Day 1 | Upload csv, backend | 3 hours |
-| Day 2 | Validation, | TBD |
+| Day 2 | Validation, commit valid rows, display data | 4 hours |
 | Day 3 |TBD | TBD |
 | Day 4 | TBD | TBD |
 | Day 5 | TBD | TBD |
+| Day 6 | TBD | TBD |
+| Day 7 | TBD | TBD |
 | **Total** | | **TBD** |

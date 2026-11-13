@@ -22,8 +22,9 @@ export type AssetDetails = {
   children: Asset[]; // immediate children only
 };
 
-export async function fetchAssets(): Promise<Asset[]> {
-  return (await get("/api/assets")).assets;
+// Fetches a list of assets, e.g. from "/api/assets" or "/api/substations".
+export async function fetchAssets(apiPath: string): Promise<Asset[]> {
+  return (await get(apiPath)).assets;
 }
 
 export async function fetchAssetDetails(assetId: string): Promise<AssetDetails> {
