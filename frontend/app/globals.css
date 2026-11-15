@@ -59,6 +59,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/*
+ * The centred column that the header and every page share, so that their
+ * left and right edges line up.
+ */
+@utility page-column {
+  @apply mx-auto w-full max-w-6xl px-6 sm:px-10;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

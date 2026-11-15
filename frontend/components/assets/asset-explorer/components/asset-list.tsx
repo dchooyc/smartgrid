@@ -52,7 +52,8 @@ export default function AssetList({ listing }: { listing: AssetListing }) {
           <StatusCounts counts={counts.byStatus} />
         )}
       </div>
-      <ul className="flex flex-col gap-4">
+      {/* Two cards side by side where the page is wide enough. */}
+      <ul className="grid gap-4 lg:grid-cols-2">
         {assets.map((asset) => (
           <li key={asset.asset_id}>
             <AssetSummary asset={asset} />

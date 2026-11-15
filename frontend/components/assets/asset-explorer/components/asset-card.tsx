@@ -26,7 +26,7 @@ export default function AssetCard({ asset, children }: AssetCardProps) {
   return (
     <div
       data-asset-type={asset.asset_type}
-      className="relative flex flex-col gap-3 rounded border-l-4 border-(--asset-accent) bg-(--asset-tint) px-5 py-4"
+      className="relative flex h-full flex-col gap-3 rounded border-l-4 border-(--asset-accent) bg-(--asset-tint) px-5 py-4"
     >
       {/*
         Both corner icons share one 32px column. The status icon's top is level

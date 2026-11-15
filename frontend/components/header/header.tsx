@@ -38,7 +38,7 @@ function CurrentHeader() {
 function HeaderBar({ pathname }: { pathname: string }) {
   return (
     <header className="border-b border-border bg-background font-sans">
-      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3 sm:px-16">
+      <div className="page-column flex flex-wrap items-center gap-x-6 gap-y-2 py-4">
         <nav
           aria-label="Asset pages"
           className="flex flex-wrap items-center gap-x-5 gap-y-1"
