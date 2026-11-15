@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa6";
 import { fetchAssetDetails, fetchSubstations, type Asset } from "../lib/api";
-import { assetPath } from "../lib/fields";
+import { explorerPath } from "../lib/fields";
 import { TYPE_ICONS } from "../lib/type-icons";
 import { useLoaded } from "../lib/use-loaded";
 import StatusIcon from "./status-icon";
@@ -128,7 +128,7 @@ function TreeNode({ asset, ...tree }: TreeProps & { asset: Asset }) {
           <span className="w-7 shrink-0" />
         )}
         <Link
-          href={assetPath(asset.asset_id)}
+          href={explorerPath(asset.asset_id)}
           aria-current={selected ? "page" : undefined}
           title={`${asset.asset_id} · ${asset.asset_name}`}
           className="flex min-w-0 flex-1 items-center gap-2 py-1 text-sm"
