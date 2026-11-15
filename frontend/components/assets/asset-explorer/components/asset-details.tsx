@@ -1,9 +1,13 @@
 import { fetchAssetDetails } from "../lib/api";
 import { useLoaded } from "../lib/use-loaded";
 import AssetCard from "./asset-card";
-import AssetChildren from "./asset-children";
+import { Descendants } from "./asset-children";
 import AssetFields from "./asset-fields";
 import AssetParent from "./asset-parent";
+
+// The parent card is indented from the asset's own card, by the same space
+// that opened children and parents get.
+const RELATED = "ml-[42px]";
 
 export default function AssetDetails({ assetId }: { assetId: string }) {
   const details = useLoaded(() => fetchAssetDetails(assetId));
@@ -28,7 +32,9 @@ export default function AssetDetails({ assetId }: { assetId: string }) {
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Parent</h2>
         {parent ? (
-          <AssetParent asset={parent} />
+          <div className={RELATED}>
+            <AssetParent asset={parent} />
+          </div>
         ) : (
           <p className="text-muted">This asset has no parent.</p>
         )}
@@ -39,7 +45,7 @@ export default function AssetDetails({ assetId }: { assetId: string }) {
         {children.length === 0 ? (
           <p className="text-muted">This asset has no children.</p>
         ) : (
-          <AssetChildren assets={children} />
+          <Descendants asset={asset} loaded={children} />
         )}
       </section>
     </>

@@ -20,8 +20,13 @@ export default function AssetChildren({ assets }: { assets: Asset[] }) {
   );
 }
 
+type DescendantsProps = {
+  asset: Asset;
+  loaded?: Asset[]; // the asset's children, if they are already fetched
+};
+
 // The button that opens and closes an asset's children.
-function Descendants({ asset }: { asset: Asset }) {
+export function Descendants({ asset, loaded }: DescendantsProps) {
   const [open, setOpen] = useState(false);
   const Chevron = open ? FaChevronDown : FaChevronRight;
   const children = asset.child_count === 1 ? "child" : "children";
@@ -40,7 +45,11 @@ function Descendants({ asset }: { asset: Asset }) {
       {open && (
         // The space and line on the left show these belong to the card above.
         <div className="ml-4 border-l-2 border-border pl-6">
-          <LoadedChildren assetId={asset.asset_id} />
+          {loaded ? (
+            <AssetChildren assets={loaded} />
+          ) : (
+            <LoadedChildren assetId={asset.asset_id} />
+          )}
         </div>
       )}
     </>
