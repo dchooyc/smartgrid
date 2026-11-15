@@ -13,8 +13,8 @@
 5. Frontend to display results and option to commit valid rows ✅
 6. Commit valid rows functionality writes to DB ✅
 7. Frontend explorer component to display data from backend API ✅
-8. Containerize full app with docker
-9. Update readme with setup and testing
+8. Containerize full app with docker ✅
+9. Update readme with setup and testing ✅
 10. Frontend component to display assets hierarchy
 11. Frontend search functionality with tree expansion and highlighting
 12. Add logging for errors, requests and imports
@@ -156,7 +156,7 @@ I did not allow the agent (claude code) to run on it's own with permission to co
 | Day 2 | Validation, commit valid rows, display data | 4 hours |
 | Day 3 | Asset type pages, asset card design, lazy loading, csv generator | 6 hours |
 | Day 4 | Rest | - |
-| Day 5 | TBD | TBD |
+| Day 5 | Docker | TBD |
 | Day 6 | TBD | TBD |
 | Day 7 | TBD | TBD |
 | **Total** | | **TBD** |

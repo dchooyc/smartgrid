@@ -25,19 +25,30 @@ Built with **Next.js, TypeScript, Go and PostgreSQL**.
 | Testing | Go standard `testing` package |
 
 ## 3. Getting Started
+
+**Run with Docker** (requires only Docker)
+
 ```bash
-To have a setup script
+docker compose up --build
+```
+
+Open http://localhost:3000. Reset the data with `docker compose down -v`.
+
+If port 5432 is already in use: `DB_PORT=5433 docker compose up --build`
+
+**Develop locally** (requires Docker, Go and Node.js)
+
+```bash
+./scripts/setup.sh   # once: starts the database, applies migrations, installs dependencies
+./scripts/dev.sh     # frontend on :3000, backend on :8080
 ```
 
 ## 4. Running Tests
 
-Run the complete existing Go test suite:
-
-`bash scripts/test.sh`
-
-Or directly:
-
-`cd backend && go test ./...`
+```bash
+docker compose run --rm test   # with Docker
+./scripts/test.sh              # locally
+```
 
 Unit tests cover validation rules, cycle detection, hierarchy checks, CSV generation and import processing.
 
@@ -73,15 +84,11 @@ Unit tests cover validation rules, cycle detection, hierarchy checks, CSV genera
 
 **Search and navigation:** TODO
 
-## 8. Docker Setup
+## 8. Logging and Integration Tests
 
 TODO
 
-## 9. Logging and Integration Tests
-
-TODO
-
-## 10. Known Limitations
+## 9. Known Limitations
 
 - Existing assets cannot be updated through CSV imports.
 - Validation currently loads existing assets into memory.
