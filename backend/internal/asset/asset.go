@@ -51,6 +51,7 @@ type Stored struct {
 	SerialNumber     *string   `json:"serial_number"`
 	CommissionedDate *string   `json:"commissioned_date"` // year-month-day
 	CreatedAt        time.Time `json:"created_at"`
+	ChildCount       int       `json:"child_count"` // assets directly beneath it
 }
 
 // Counts says how many stored assets there are, in total and of each type

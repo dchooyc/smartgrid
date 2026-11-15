@@ -16,6 +16,7 @@ export type Asset = {
   serial_number: string | null;
   commissioned_date: string | null; // year-month-day
   created_at: string;
+  child_count: number; // assets directly beneath it
 };
 
 export type AssetDetails = {

@@ -169,8 +169,9 @@ func (s *Store) ListChildren(ctx context.Context, parentID string) ([]asset.Stor
 	return s.queryAssets(ctx, "WHERE parent_asset_id = $1", 0, parentID)
 }
 
-// queryAssets selects whole assets. The condition is an optional WHERE clause
-// and a limit above zero caps the number of rows.
+// queryAssets selects whole assets, each with the number of its children. The
+// condition is an optional WHERE clause and a limit above zero caps the
+// number of rows.
 func (s *Store) queryAssets(ctx context.Context, condition string, limit int, args ...any) ([]asset.Stored, error) {
 	limitClause := ""
 	if limit > 0 {
@@ -179,7 +180,8 @@ func (s *Store) queryAssets(ctx context.Context, condition string, limit int, ar
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT asset_id, parent_asset_id, asset_type, asset_name, operational_status,
 			voltage_kv, rating_kva, manufacturer, model, serial_number,
-			commissioned_date::text, created_at
+			commissioned_date::text, created_at,
+			(SELECT count(*) FROM assets child WHERE child.parent_asset_id = assets.asset_id)
 		FROM assets `+condition+`
 		ORDER BY asset_id `+limitClause, args...)
 	if err != nil {
@@ -192,7 +194,7 @@ func (s *Store) queryAssets(ctx context.Context, condition string, limit int, ar
 		var a asset.Stored
 		err := rows.Scan(&a.ID, &a.ParentID, &a.Type, &a.Name, &a.Status,
 			&a.VoltageKV, &a.RatingKVA, &a.Manufacturer, &a.Model, &a.SerialNumber,
-			&a.CommissionedDate, &a.CreatedAt)
+			&a.CommissionedDate, &a.CreatedAt, &a.ChildCount)
 		if err != nil {
 			return nil, err
 		}

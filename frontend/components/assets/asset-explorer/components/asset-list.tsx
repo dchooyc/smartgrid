@@ -1,11 +1,8 @@
 import { useEffect, useRef } from "react";
-import Link from "next/link";
 import { PAGE_SIZE } from "../lib/api";
-import { assetPath } from "../lib/fields";
 import { ALL_ASSETS, type AssetListing } from "../lib/types";
 import { useAssetPages } from "../lib/use-asset-pages";
-import AssetCard from "./asset-card";
-import AssetFields from "./asset-fields";
+import AssetSummary from "./asset-summary";
 import StatusCounts from "./status-counts";
 import TypeCounts from "./type-counts";
 
@@ -58,15 +55,7 @@ export default function AssetList({ listing }: { listing: AssetListing }) {
       <ul className="flex flex-col gap-4">
         {assets.map((asset) => (
           <li key={asset.asset_id}>
-            <AssetCard asset={asset}>
-              <AssetFields asset={asset} skipEmpty />
-              <Link
-                href={assetPath(asset.asset_id)}
-                className="self-start text-accent underline"
-              >
-                View details
-              </Link>
-            </AssetCard>
+            <AssetSummary asset={asset} />
           </li>
         ))}
       </ul>

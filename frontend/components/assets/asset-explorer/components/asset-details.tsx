@@ -3,6 +3,7 @@ import { fetchAssetDetails, type Asset } from "../lib/api";
 import { assetPath } from "../lib/fields";
 import { useLoaded } from "../lib/use-loaded";
 import AssetCard from "./asset-card";
+import AssetChildren from "./asset-children";
 import AssetFields from "./asset-fields";
 import StatusIcon from "./status-icon";
 
@@ -40,20 +41,14 @@ export default function AssetDetails({ assetId }: { assetId: string }) {
         {children.length === 0 ? (
           <p className="text-muted">This asset has no children.</p>
         ) : (
-          <ul className="flex flex-col gap-1">
-            {children.map((child) => (
-              <li key={child.asset_id}>
-                <RelatedAsset asset={child} />
-              </li>
-            ))}
-          </ul>
+          <AssetChildren assets={children} />
         )}
       </section>
     </>
   );
 }
 
-// A parent or child: its ID as a link, then a few fields as plain text.
+// The parent: its ID as a link, then a few fields as plain text.
 function RelatedAsset({ asset }: { asset: Asset }) {
   return (
     <p>
