@@ -14,8 +14,9 @@ import (
 const (
 	addr = ":8080"
 
-	// defaultDatabaseURL is used when DATABASE_URL is not set.
-	defaultDatabaseURL = "postgres://localhost:5432/smartgrid?sslmode=disable"
+	// defaultDatabaseURL is used when DATABASE_URL is not set. It is the
+	// development database that Docker Compose runs (see compose.yaml).
+	defaultDatabaseURL = "postgres://smartgrid:smartgrid@localhost:5432/smartgrid?sslmode=disable"
 )
 
 func main() {

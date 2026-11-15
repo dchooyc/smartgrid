@@ -1,12 +1,21 @@
 #!/usr/bin/env bash
 # Deletes every asset from the database, for starting over during development.
-# Uses DATABASE_URL, or the local smartgrid database if it is not set.
+# Uses DATABASE_URL, or the Docker Compose database if it is not set.
 set -euo pipefail
 
-url="${DATABASE_URL:-postgres://localhost:5432/smartgrid?sslmode=disable}"
+url="${DATABASE_URL:-postgres://smartgrid:smartgrid@localhost:5432/smartgrid?sslmode=disable}"
 
+# Without psql on this machine, the one inside the database container is used.
 run_sql() {
-  psql "$url" --quiet --no-psqlrc --set ON_ERROR_STOP=1 --tuples-only --no-align "$@"
+  local options=(--quiet --no-psqlrc --set ON_ERROR_STOP=1 --tuples-only --no-align)
+  if command -v psql >/dev/null 2>&1; then
+    psql "$url" "${options[@]}" "$@"
+  elif [ -z "${DATABASE_URL:-}" ]; then
+    (cd "$(dirname "$0")/.." && docker compose exec -T db psql --username smartgrid --dbname smartgrid "${options[@]}" "$@")
+  else
+    echo "psql is not installed, so DATABASE_URL cannot be used." >&2
+    exit 1
+  fi
 }
 
 red=$'\033[1;31m'

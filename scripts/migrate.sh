@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Applies the SQL migrations in backend/migrations that have not run yet.
-# Uses DATABASE_URL, or the local smartgrid database if it is not set.
+# Uses DATABASE_URL, or the Docker Compose database if it is not set.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-url="${DATABASE_URL:-postgres://localhost:5432/smartgrid?sslmode=disable}"
+url="${DATABASE_URL:-postgres://smartgrid:smartgrid@localhost:5432/smartgrid?sslmode=disable}"
 
 run_sql() {
   psql "$url" --quiet --no-psqlrc --set ON_ERROR_STOP=1 "$@"

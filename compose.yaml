@@ -15,8 +15,10 @@ services:
     volumes:
       - db-data:/var/lib/postgresql
     ports:
-      # 5433 on this machine, so it does not clash with a local PostgreSQL.
-      - "127.0.0.1:5433:5432"
+      # Reachable from this machine for local development (scripts/setup.sh).
+      # If port 5432 is already taken, e.g. by a local PostgreSQL, choose
+      # another: DB_PORT=5433 docker compose up
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     healthcheck:
       # Checked over the network, not the local socket: on first start the
       # image briefly runs a setup server that only the socket can reach, and
