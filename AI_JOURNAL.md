@@ -15,7 +15,7 @@
 7. Frontend explorer component to display data from backend API ✅
 8. Containerize full app with docker ✅
 9. Update readme with setup and testing ✅
-10. Frontend component to display assets hierarchy
+10. Frontend component to display assets hierarchy ✅
 11. Frontend search functionality with tree expansion and highlighting
 12. Add logging for errors, requests and imports
 13. Review testing comprehensively

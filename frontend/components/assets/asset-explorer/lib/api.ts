@@ -23,6 +23,8 @@ export type AssetDetails = {
   asset: Asset;
   parent: Asset | null; // null for substations
   children: Asset[]; // immediate children only
+  ancestor_ids: string[]; // from its substation down to its parent
+  descendant_counts: Record<string, number>; // all assets beneath it, by type
 };
 
 // How many assets a list has, however many of them have been fetched.
@@ -61,6 +63,11 @@ export async function fetchAssetPage(
     },
     nextAfter: result.next_after,
   };
+}
+
+// Fetches every substation: the top level of the hierarchy.
+export async function fetchSubstations(): Promise<Asset[]> {
+  return (await get("/api/substations")).assets;
 }
 
 export async function fetchAssetDetails(

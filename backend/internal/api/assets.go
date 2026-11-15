@@ -35,6 +35,10 @@ type assetDetailsResponse struct {
 	Asset    asset.Stored   `json:"asset"`
 	Parent   *asset.Stored  `json:"parent"`   // null for substations
 	Children []asset.Stored `json:"children"` // immediate children only
+	// AncestorIDs runs from the asset's substation down to its parent.
+	AncestorIDs []string `json:"ancestor_ids"`
+	// DescendantCounts counts the assets beneath it at any depth, by type.
+	DescendantCounts map[string]int `json:"descendant_counts"`
 }
 
 // ListAssets returns the stored assets, or only those of the type given in
@@ -99,7 +103,8 @@ func (h *Handler) listAssets(w http.ResponseWriter, r *http.Request, assetType s
 	writeJSON(w, http.StatusOK, response)
 }
 
-// GetAsset returns one asset with its direct parent and immediate children.
+// GetAsset returns one asset with its direct parent and immediate children,
+// and where it sits in the hierarchy.
 func (h *Handler) GetAsset(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("assetId")
@@ -118,11 +123,25 @@ func (h *Handler) GetAsset(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		children, err = h.store.ListChildren(ctx, id)
 	}
+	var ancestorIDs []string
+	if err == nil {
+		ancestorIDs, err = h.store.ListAncestorIDs(ctx, id)
+	}
+	var descendantCounts map[string]int
+	if err == nil {
+		descendantCounts, err = h.store.CountDescendants(ctx, id)
+	}
 	if err != nil {
 		writeError(w, http.StatusServiceUnavailable, "the database is not available: "+err.Error())
 		return
 	}
 
 	w.Header().Set("Cache-Control", cacheAssets)
-	writeJSON(w, http.StatusOK, assetDetailsResponse{Asset: *found, Parent: parent, Children: children})
+	writeJSON(w, http.StatusOK, assetDetailsResponse{
+		Asset:            *found,
+		Parent:           parent,
+		Children:         children,
+		AncestorIDs:      ancestorIDs,
+		DescendantCounts: descendantCounts,
+	})
 }

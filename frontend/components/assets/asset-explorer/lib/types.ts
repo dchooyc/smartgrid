@@ -1,3 +1,12 @@
+// The name of each asset type in the plural, for headings and counts.
+export const TYPE_NAMES: Record<string, string> = {
+  SUBSTATION: "Substations",
+  TRANSFORMER: "Transformers",
+  LV_BOARD: "LV Boards",
+  SWITCHBOARD: "Switchboards",
+  SWITCHBOARD_PANEL: "Switchboard Panels",
+};
+
 // A list of assets: the page that shows it and the backend route it is
 // fetched from.
 export type AssetListing = { path: string; apiPath: string; title: string };

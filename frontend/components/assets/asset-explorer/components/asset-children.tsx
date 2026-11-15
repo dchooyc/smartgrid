@@ -1,22 +1,40 @@
 import { useState } from "react";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa6";
 import { fetchAssetDetails, type Asset } from "../lib/api";
+import { TYPE_ICONS } from "../lib/type-icons";
+import { TYPE_NAMES } from "../lib/types";
 import { useLoaded } from "../lib/use-loaded";
 import AssetSummary from "./asset-summary";
 
-// The children of an asset as cards. A child that has children of its own
-// can be opened to show them beneath it, indented, and so on down the
-// hierarchy.
+// The children of an asset as cards, grouped by type in the order of the
+// hierarchy. A child that has children of its own can be opened to show them
+// beneath it, indented, and so on down the hierarchy.
 export default function AssetChildren({ assets }: { assets: Asset[] }) {
+  const groups = Object.keys(TYPE_ICONS)
+    .map((assetType) => ({
+      assetType,
+      assets: assets.filter((asset) => asset.asset_type === assetType),
+    }))
+    .filter((group) => group.assets.length > 0);
+
   return (
-    <ul className="flex flex-col gap-4">
-      {assets.map((asset) => (
-        <li key={asset.asset_id} className="flex flex-col gap-2">
-          <AssetSummary asset={asset} />
-          {asset.child_count > 0 && <Descendants asset={asset} />}
-        </li>
+    <div className="flex flex-col gap-6">
+      {groups.map((group) => (
+        <section key={group.assetType} className="flex flex-col gap-2">
+          <h3 className="text-sm font-semibold text-muted">
+            {TYPE_NAMES[group.assetType]} ({group.assets.length})
+          </h3>
+          <ul className="flex flex-col gap-4">
+            {group.assets.map((asset) => (
+              <li key={asset.asset_id} className="flex flex-col gap-2">
+                <AssetSummary asset={asset} />
+                {asset.child_count > 0 && <Descendants asset={asset} />}
+              </li>
+            ))}
+          </ul>
+        </section>
       ))}
-    </ul>
+    </div>
   );
 }
 

@@ -4,6 +4,7 @@ import AssetCard from "./asset-card";
 import { Descendants } from "./asset-children";
 import AssetFields from "./asset-fields";
 import AssetParent from "./asset-parent";
+import DescendantCounts from "./descendant-counts";
 
 // The parent card is indented from the asset's own card, by the same space
 // that opened children and parents get.
@@ -18,7 +19,7 @@ export default function AssetDetails({ assetId }: { assetId: string }) {
   if (details.state === "error") {
     return <p className="font-medium text-red-700">{details.message}</p>;
   }
-  const { asset, parent, children } = details.data;
+  const { asset, parent, children, descendant_counts } = details.data;
 
   return (
     <>
@@ -45,7 +46,10 @@ export default function AssetDetails({ assetId }: { assetId: string }) {
         {children.length === 0 ? (
           <p className="text-muted">This asset has no children.</p>
         ) : (
-          <Descendants asset={asset} loaded={children} />
+          <>
+            <DescendantCounts counts={descendant_counts} />
+            <Descendants asset={asset} loaded={children} />
+          </>
         )}
       </section>
     </>

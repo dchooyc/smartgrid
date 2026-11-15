@@ -169,6 +169,64 @@ func (s *Store) ListChildren(ctx context.Context, parentID string) ([]asset.Stor
 	return s.queryAssets(ctx, "WHERE parent_asset_id = $1", 0, parentID)
 }
 
+// ListAncestorIDs returns the IDs of the assets above the given one, from its
+// substation down to its direct parent. It walks up the hierarchy one parent
+// at a time.
+func (s *Store) ListAncestorIDs(ctx context.Context, id string) ([]string, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		WITH RECURSIVE ancestors AS (
+			SELECT parent_asset_id, 1 AS distance FROM assets WHERE asset_id = $1
+			UNION ALL
+			SELECT assets.parent_asset_id, ancestors.distance + 1
+			FROM assets JOIN ancestors ON assets.asset_id = ancestors.parent_asset_id
+		)
+		SELECT parent_asset_id FROM ancestors
+		WHERE parent_asset_id IS NOT NULL
+		ORDER BY distance DESC`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	ids := []string{}
+	for rows.Next() {
+		var ancestor string
+		if err := rows.Scan(&ancestor); err != nil {
+			return nil, err
+		}
+		ids = append(ids, ancestor)
+	}
+	return ids, rows.Err()
+}
+
+// CountDescendants counts every asset beneath the given one, at any depth,
+// by type. It walks down the hierarchy one level at a time.
+func (s *Store) CountDescendants(ctx context.Context, id string) (map[string]int, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		WITH RECURSIVE descendants AS (
+			SELECT asset_id, asset_type FROM assets WHERE parent_asset_id = $1
+			UNION ALL
+			SELECT assets.asset_id, assets.asset_type
+			FROM assets JOIN descendants ON assets.parent_asset_id = descendants.asset_id
+		)
+		SELECT asset_type, count(*) FROM descendants GROUP BY asset_type`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	counts := map[string]int{}
+	for rows.Next() {
+		var assetType string
+		var count int
+		if err := rows.Scan(&assetType, &count); err != nil {
+			return nil, err
+		}
+		counts[assetType] = count
+	}
+	return counts, rows.Err()
+}
+
 // queryAssets selects whole assets, each with the number of its children. The
 // condition is an optional WHERE clause and a limit above zero caps the
 // number of rows.
