@@ -8,7 +8,11 @@ type AssetPageProps = {
 export default function ExplorerAssetPage({ params }: AssetPageProps) {
   // The asset ID is only known per request, so it is read in Suspense.
   return (
-    <Suspense fallback={<p className="text-muted">Loading asset...</p>}>
+    <Suspense
+      fallback={
+        <p className="appear-late min-h-screen text-muted">Loading asset...</p>
+      }
+    >
       <SelectedAsset params={params} />
     </Suspense>
   );

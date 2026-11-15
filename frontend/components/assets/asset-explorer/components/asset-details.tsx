@@ -14,7 +14,11 @@ export default function AssetDetails({ assetId }: { assetId: string }) {
   const details = useLoaded(() => fetchAssetDetails(assetId));
 
   if (details.state === "loading") {
-    return <p className="text-muted">Loading asset {assetId}...</p>;
+    return (
+      <p className="appear-late min-h-screen text-muted">
+        Loading asset {assetId}...
+      </p>
+    );
   }
   if (details.state === "error") {
     return <p className="font-medium text-red-700">{details.message}</p>;
@@ -23,14 +27,14 @@ export default function AssetDetails({ assetId }: { assetId: string }) {
 
   return (
     <>
-      <section className="flex flex-col gap-2">
+      <section className="fade-in flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Details</h2>
         <AssetCard asset={asset}>
           <AssetFields asset={asset} />
         </AssetCard>
       </section>
 
-      <section className="flex flex-col gap-2">
+      <section className="fade-in flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Parent</h2>
         {parent ? (
           <div className={RELATED}>
@@ -41,7 +45,7 @@ export default function AssetDetails({ assetId }: { assetId: string }) {
         )}
       </section>
 
-      <section className="flex flex-col gap-2">
+      <section className="fade-in flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Children ({children.length})</h2>
         {children.length === 0 ? (
           <p className="text-muted">This asset has no children.</p>

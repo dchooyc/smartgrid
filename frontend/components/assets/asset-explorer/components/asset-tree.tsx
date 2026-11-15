@@ -25,7 +25,7 @@ export default function AssetTree() {
     <nav aria-label="Asset hierarchy" className="flex flex-col gap-2">
       <h2 className="text-lg font-semibold">Hierarchy</h2>
       {substations.state === "loading" ? (
-        <p className="text-sm text-muted">Loading hierarchy...</p>
+        <p className="appear-late text-sm text-muted">Loading hierarchy...</p>
       ) : substations.state === "error" ? (
         <p className="text-sm font-medium text-red-700">
           {substations.message}
@@ -165,7 +165,9 @@ function TreeChildren({ assetId, ...tree }: TreeProps & { assetId: string }) {
   const details = useLoaded(() => fetchAssetDetails(assetId));
 
   if (details.state === "loading") {
-    return <p className="py-1 pl-7 text-sm text-muted">Loading...</p>;
+    return (
+      <p className="appear-late py-1 pl-7 text-sm text-muted">Loading...</p>
+    );
   }
   if (details.state === "error") {
     return (

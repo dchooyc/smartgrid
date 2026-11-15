@@ -67,6 +67,36 @@
   @apply mx-auto w-full max-w-6xl px-6 sm:px-10;
 }
 
+/*
+ * Always keeps room for the scrollbar, so that a page does not shift sideways
+ * when it grows long enough to need one. The scrollbar itself is thin, with
+ * a soft thumb and no visible track.
+ */
+html {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted) 35%, transparent) transparent;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* For content that has just loaded: it fades in instead of popping in. */
+@utility fade-in {
+  animation: fade-in 150ms ease-out;
+}
+
+/*
+ * For "Loading..." messages: they stay invisible for the first 200ms, so a
+ * fast load never shows one.
+ */
+@utility appear-late {
+  animation: fade-in 150ms ease-out 200ms backwards;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

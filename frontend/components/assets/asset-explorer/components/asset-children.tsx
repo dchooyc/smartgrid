@@ -79,7 +79,9 @@ function LoadedChildren({ assetId }: { assetId: string }) {
   const details = useLoaded(() => fetchAssetDetails(assetId));
 
   if (details.state === "loading") {
-    return <p className="text-sm text-muted">Loading children...</p>;
+    return (
+      <p className="appear-late text-sm text-muted">Loading children...</p>
+    );
   }
   if (details.state === "error") {
     return (

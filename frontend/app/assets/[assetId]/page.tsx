@@ -10,7 +10,13 @@ export default function AssetPage({ params }: AssetPageProps) {
     <main className="page-column flex flex-1 flex-col py-10 font-sans">
       <div className="flex flex-col gap-8">
         {/* The asset ID is only known per request, so it is read in Suspense. */}
-        <Suspense fallback={<p className="text-muted">Loading asset...</p>}>
+        <Suspense
+          fallback={
+            <p className="appear-late min-h-screen text-muted">
+              Loading asset...
+            </p>
+          }
+        >
           <SelectedAsset params={params} />
         </Suspense>
       </div>

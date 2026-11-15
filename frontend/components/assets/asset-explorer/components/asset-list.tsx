@@ -33,7 +33,9 @@ export default function AssetList({ listing }: { listing: AssetListing }) {
     return error ? (
       <p className="font-medium text-red-700">{error}</p>
     ) : (
-      <p className="text-muted">Loading {listing.title}...</p>
+      <p className="appear-late min-h-screen text-muted">
+        Loading {listing.title}...
+      </p>
     );
   }
   if (counts.total === 0) {
@@ -42,7 +44,7 @@ export default function AssetList({ listing }: { listing: AssetListing }) {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-muted">
+      <div className="fade-in flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-muted">
         <p>
           {counts.total} {listing.title}
         </p>
@@ -53,7 +55,7 @@ export default function AssetList({ listing }: { listing: AssetListing }) {
         )}
       </div>
       {/* Two cards side by side where the page is wide enough. */}
-      <ul className="grid gap-4 lg:grid-cols-2">
+      <ul className="fade-in grid gap-4 lg:grid-cols-2">
         {assets.map((asset) => (
           <li key={asset.asset_id}>
             <AssetSummary asset={asset} />
