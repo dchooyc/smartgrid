@@ -130,6 +130,19 @@ Keep each validation function independent and easy to test. Avoid unnecessary de
 2. I prompted for paths for each asset type and the agent produced a new page on the frontend for each asset type /substations, /transformers and so on. I then prompted for dynamic paths under /asset-type/[assetType] instead as the pages contained the same code.
 
 ## Reviewing and verification of generated code
+I did not allow the agent (claude code) to run on it's own with permission to commit and push code directly. Every commit was made by me after I had run the code to verify the change I had intended with the prompt. I did this to ensure I could meet the deadline and avoid having to revert and redo poorly executed prompts.
+
+**How I worked**
+1. I wrote a description of the functionality/ change I intended to make and gave it to chatGPT to write a more precise prompt for claude code.
+2. I kept each change request small enough for me to be able to review the code change but also large enough to make reasonable progress.
+3. When I wasn't sure of how a change would be implemented, I would prompt the agent for implementation options. I would choose an implementation option that solves the problem and requires minimal code changes if possible.
+
+**Verifying a change**
+1. I would run the app to test the change.
+2. I then read the code changes for each file and if I did not understand something, I would clarify it with the agent.
+3. If I thought there were simple improvements that could be made, I would keep prompting for the small changes.
+4. If I knew my idea for an improvement would be a bigger code change, I would commit the current changes first.
+
 
 ## What the agent did poorly
 1. The agent doesn't refactor code for human readability very well. It tends to overdo the refactor. Of course refactoring is also a matter of personal taste.
@@ -141,8 +154,8 @@ Keep each validation function independent and easy to test. Avoid unnecessary de
 | Day 0 | Read requirements, planning, setup | 2 hours |
 | Day 1 | Upload csv, backend | 3 hours |
 | Day 2 | Validation, commit valid rows, display data | 4 hours |
-| Day 3 |TBD | TBD |
-| Day 4 | TBD | TBD |
+| Day 3 | Asset type pages, asset card design, lazy loading, csv generator | 6 hours |
+| Day 4 | Rest | - |
 | Day 5 | TBD | TBD |
 | Day 6 | TBD | TBD |
 | Day 7 | TBD | TBD |
