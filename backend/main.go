@@ -3,7 +3,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -20,13 +20,18 @@ const (
 )
 
 func main() {
+	// Logs go to standard output, one line per event, for whatever runs the
+	// server to collect: the terminal in development, Docker in a container.
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		databaseURL = defaultDatabaseURL
 	}
 	db, err := store.Open(databaseURL)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("could not open the database", "error", err)
+		os.Exit(1)
 	}
 
 	handler := api.NewHandler(db)
@@ -43,6 +48,8 @@ func main() {
 	mux.HandleFunc("GET /api/switchboards", handler.ListAssetsOfType("SWITCHBOARD"))
 	mux.HandleFunc("GET /api/switchboard-panels", handler.ListAssetsOfType("SWITCHBOARD_PANEL"))
 
-	log.Printf("listening on %s", addr)
-	log.Fatal(http.ListenAndServe(addr, mux))
+	logger.Info("listening", "addr", addr)
+	err = http.ListenAndServe(addr, api.LogRequests(logger, mux))
+	logger.Error("the server stopped", "error", err)
+	os.Exit(1)
 }
