@@ -1,7 +1,7 @@
 # AI usage journal
 
-## Tool(s) and model(s) used.
-- Claude Code extension in vscode, Fable 5.1
+## Tool(s) and model(s) used
+- Claude Code extension in VS Code, Fable 5.2
 - ChatGPT to validate ideas, GPT-6
 
 ## Work decomposition and sequencing
@@ -13,14 +13,14 @@
 5. Frontend to display results and option to commit valid rows ✅
 6. Commit valid rows functionality writes to DB ✅
 7. Frontend explorer component to display data from backend API ✅
-8. Containerize full app with docker ✅
-9. Update readme with setup and testing ✅
+8. Containerize full app with Docker ✅
+9. Update README with setup and testing ✅
 10. Frontend component to display assets hierarchy ✅
 11. Frontend search functionality with tree expansion and highlighting
 12. Add logging for errors, requests and imports
 13. Review testing comprehensively
 14. Review and refactor code for clarity
-15. Write architecture, trade off and limitations
+15. Write architecture, trade-off and limitations
 16. Complete all documentation
 17. Test fresh setup
 18. Host app
@@ -86,6 +86,8 @@ Create a minimal Go backend (as a folder named backend outside of frontend) and 
 ```
 
 ```
+# Backend to validate data according to listed rules
+
 Extend the existing Go backend to validate CSV asset records. Keep the code simple, readable, and organized into separate validation functions executed in this order:
 
 1. **Required fields:** `asset_id`, `asset_type`, and `asset_name` cannot be empty.
@@ -125,15 +127,15 @@ Keep each validation function independent and easy to test. Avoid unnecessary de
 ```
 
 ## Rejected suggestions and why
-1. In the csv upload component it's check that the file is a csv only checked that it ends with .csv. I prompted for a better check as files can be mistakenly named. While these "simpler" validations can be made on the backend, my intention is to catch errors early and reduce unneccessary calls to the backend. I also prompted for missing/ duplicate columns checks.
+1. In the CSV upload component the check that the file is a CSV only checked that it ends with .csv. I prompted for a better check as files can be mistakenly named. While these "simpler" validations can be made on the backend, my intention is to catch errors early and reduce unnecessary calls to the backend. I also prompted for missing/duplicate columns checks.
 
 2. I prompted for paths for each asset type and the agent produced a new page on the frontend for each asset type /substations, /transformers and so on. I then prompted for dynamic paths under /asset-type/[assetType] instead as the pages contained the same code.
 
 ## Reviewing and verification of generated code
-I did not allow the agent (claude code) to run on it's own with permission to commit and push code directly. Every commit was made by me after I had run the code to verify the change I had intended with the prompt. I did this to ensure I could meet the deadline and avoid having to revert and redo poorly executed prompts.
+I did not allow the agent (Claude Code) to run on its own with permission to commit and push code directly. Every commit was made by me after I had run the code to verify the change I had intended with the prompt. I did this to ensure I could meet the deadline and avoid having to revert and redo poorly executed prompts.
 
 **How I worked**
-1. I wrote a description of the functionality/ change I intended to make and gave it to chatGPT to write a more precise prompt for claude code.
+1. I wrote a description of the functionality/change I intended to make and gave it to ChatGPT to write a more precise prompt for Claude Code.
 2. I kept each change request small enough for me to be able to review the code change but also large enough to make reasonable progress.
 3. When I wasn't sure of how a change would be implemented, I would prompt the agent for implementation options. I would choose an implementation option that solves the problem and requires minimal code changes if possible.
 
@@ -152,11 +154,11 @@ I did not allow the agent (claude code) to run on it's own with permission to co
 | Day | Work done | Human working time |
 |-----|-------------------------|--------------------|
 | Day 0 | Read requirements, planning, setup | 2 hours |
-| Day 1 | Upload csv, backend | 3 hours |
+| Day 1 | Upload CSV, backend | 3 hours |
 | Day 2 | Validation, commit valid rows, display data | 4 hours |
-| Day 3 | Asset type pages, asset card design, lazy loading, csv generator | 6 hours |
+| Day 3 | Asset type pages, asset card design, lazy loading, CSV generator | 6 hours |
 | Day 4 | Rest | - |
-| Day 5 | Docker | TBD |
+| Day 5 | Docker, setup script, asset hierarchy, layout | 5 hours |
 | Day 6 | TBD | TBD |
 | Day 7 | TBD | TBD |
 | **Total** | | **TBD** |
