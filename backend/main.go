@@ -34,7 +34,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	handler := api.NewHandler(db)
+	handler := api.NewHandler(db, logger)
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/validate", handler.Validate)
 	mux.HandleFunc("POST /api/imports", handler.Import)

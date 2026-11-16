@@ -31,14 +31,14 @@ func (h *Handler) Import(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	tx, err := h.store.Begin(ctx)
 	if err != nil {
-		writeError(w, http.StatusServiceUnavailable, "the database is not available: "+err.Error())
+		h.fail(w, r, http.StatusServiceUnavailable, "the database is not available", err)
 		return
 	}
 	defer tx.Rollback() // does nothing once the transaction is committed
 
 	existing, err := tx.Assets(ctx)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "the existing assets could not be read: "+err.Error())
+		h.fail(w, r, http.StatusInternalServerError, "the existing assets could not be read", err)
 		return
 	}
 
@@ -55,7 +55,7 @@ func (h *Handler) Import(w http.ResponseWriter, r *http.Request) {
 		err = tx.Commit()
 	}
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "the rows could not be saved, so nothing was committed: "+err.Error())
+		h.fail(w, r, http.StatusInternalServerError, "the rows could not be saved, so nothing was committed", err)
 		return
 	}
 

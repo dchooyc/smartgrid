@@ -31,14 +31,14 @@ func (h *Handler) Validate(w http.ResponseWriter, r *http.Request) {
 	// committed are reported now rather than when committing.
 	existing, err := h.store.Assets(r.Context())
 	if err != nil {
-		writeError(w, http.StatusServiceUnavailable, "the database is not available: "+err.Error())
+		h.fail(w, r, http.StatusServiceUnavailable, "the database is not available", err)
 		return
 	}
 
 	errs := asset.ValidateWithStored(assets, existing)
 	validFile, invalidFile, err := csvfile.BuildFiles(upload.filename, header, assets, errs, time.Now())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "the result files could not be generated: "+err.Error())
+		h.fail(w, r, http.StatusInternalServerError, "the result files could not be generated", err)
 		return
 	}
 

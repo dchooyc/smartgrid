@@ -62,7 +62,7 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 	// One asset more than the limit is fetched, to learn whether more match.
 	assets, err := h.store.SearchAssets(r.Context(), term, searchLimit+1)
 	if err != nil {
-		writeError(w, http.StatusServiceUnavailable, "the database is not available: "+err.Error())
+		h.fail(w, r, http.StatusServiceUnavailable, "the database is not available", err)
 		return
 	}
 
@@ -124,7 +124,7 @@ func (h *Handler) listAssets(w http.ResponseWriter, r *http.Request, assetType s
 		counts, err = h.store.CountAssets(r.Context(), assetType)
 	}
 	if err != nil {
-		writeError(w, http.StatusServiceUnavailable, "the database is not available: "+err.Error())
+		h.fail(w, r, http.StatusServiceUnavailable, "the database is not available", err)
 		return
 	}
 
@@ -166,7 +166,7 @@ func (h *Handler) GetAsset(w http.ResponseWriter, r *http.Request) {
 		descendantCounts, err = h.store.CountDescendants(ctx, id)
 	}
 	if err != nil {
-		writeError(w, http.StatusServiceUnavailable, "the database is not available: "+err.Error())
+		h.fail(w, r, http.StatusServiceUnavailable, "the database is not available", err)
 		return
 	}
 
