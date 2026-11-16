@@ -5,6 +5,13 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 
+# The backend needs the database. This starts the Docker one if it is not
+# already running, e.g. after the machine was restarted. With DATABASE_URL
+# set, the database is another one and is left alone.
+if [ -z "${DATABASE_URL:-}" ]; then
+  (cd "$root" && docker compose up --detach --wait db)
+fi
+
 # Stop everything this script started when it exits.
 trap 'kill 0' EXIT
 

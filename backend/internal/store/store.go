@@ -169,6 +169,20 @@ func (s *Store) ListChildren(ctx context.Context, parentID string) ([]asset.Stor
 	return s.queryAssets(ctx, "WHERE parent_asset_id = $1", 0, parentID)
 }
 
+// SearchAssets returns the assets whose ID or name contains the term, in any
+// mix of upper and lower case, ordered by ID. A limit above zero caps how
+// many are returned.
+func (s *Store) SearchAssets(ctx context.Context, term string, limit int) ([]asset.Stored, error) {
+	pattern := "%" + escapeLike(term) + "%"
+	return s.queryAssets(ctx, "WHERE asset_id ILIKE $1 OR asset_name ILIKE $1", limit, pattern)
+}
+
+// escapeLike makes a term match only itself in a LIKE pattern, where % and _
+// otherwise stand for any text and the backslash escapes them.
+func escapeLike(term string) string {
+	return strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(term)
+}
+
 // ListAncestorIDs returns the IDs of the assets above the given one, from its
 // substation down to its direct parent. It walks up the hierarchy one parent
 // at a time.

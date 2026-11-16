@@ -14,6 +14,9 @@ const (
 	// maxPageSize is the most assets one request can ask for with "limit".
 	maxPageSize = 100
 
+	// searchLimit is the most assets one search returns.
+	searchLimit = 20
+
 	// cacheAssets lets the browser reuse an asset response for 10 seconds
 	// without asking again: long enough to absorb repeated refreshes, short
 	// enough that data changed elsewhere shows up almost at once. The
@@ -39,6 +42,37 @@ type assetDetailsResponse struct {
 	AncestorIDs []string `json:"ancestor_ids"`
 	// DescendantCounts counts the assets beneath it at any depth, by type.
 	DescendantCounts map[string]int `json:"descendant_counts"`
+}
+
+type searchResponse struct {
+	Assets []asset.Stored `json:"assets"`
+	// More says that more assets match than were returned.
+	More bool `json:"more"`
+}
+
+// Search returns the first assets whose ID or name contains the text in the
+// "q" query parameter, ignoring case.
+func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
+	term := strings.TrimSpace(r.URL.Query().Get("q"))
+	if term == "" {
+		writeError(w, http.StatusBadRequest, "q is required: the text to search for")
+		return
+	}
+
+	// One asset more than the limit is fetched, to learn whether more match.
+	assets, err := h.store.SearchAssets(r.Context(), term, searchLimit+1)
+	if err != nil {
+		writeError(w, http.StatusServiceUnavailable, "the database is not available: "+err.Error())
+		return
+	}
+
+	response := searchResponse{Assets: assets}
+	if len(assets) > searchLimit {
+		response.Assets = assets[:searchLimit]
+		response.More = true
+	}
+	w.Header().Set("Cache-Control", cacheAssets)
+	writeJSON(w, http.StatusOK, response)
 }
 
 // ListAssets returns the stored assets, or only those of the type given in

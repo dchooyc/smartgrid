@@ -65,6 +65,16 @@ export async function fetchAssetPage(
   };
 }
 
+export type SearchResult = {
+  assets: Asset[]; // the first matches, ordered by ID
+  more: boolean; // more assets match than are listed
+};
+
+// Finds the assets whose ID or name contains the term.
+export async function searchAssets(term: string): Promise<SearchResult> {
+  return get(`/api/search?${new URLSearchParams({ q: term })}`);
+}
+
 // Fetches every substation: the top level of the hierarchy.
 export async function fetchSubstations(): Promise<Asset[]> {
   return (await get("/api/substations")).assets;
