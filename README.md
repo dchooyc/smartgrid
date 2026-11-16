@@ -4,6 +4,10 @@ A full stack web app for importing electrical grid assets data from csv files an
 
 Built with **Next.js, TypeScript, Go and PostgreSQL**.
 
+![The Explorer: the hierarchy tree, search and the selected asset's details](images/explorer.png)
+
+![The upload page, where a CSV file is chosen and validated](images/upload.png)
+
 ## 1. Features
 
 **Import**
@@ -29,7 +33,22 @@ Built with **Next.js, TypeScript, Go and PostgreSQL**.
 - An error shown in the app ends with a reference, which finds that failure in the logs.
 
 
-## 2. Tech Stack
+## 2. Where to Find Each Requirement
+
+| Criterion | In the app | In the code |
+|---|---|---|
+| CSV validation | Upload a file at `/` | [validate.go](backend/internal/asset/validate.go), [stored.go](backend/internal/asset/stored.go) |
+| Agentic workflow | | [AI_JOURNAL.md](AI_JOURNAL.md) |
+| Frontend | Hierarchy tree at `/explorer`, lists at `/assets` | [asset-explorer/](frontend/components/assets/asset-explorer/), [csv-upload/](frontend/components/uploads/csv-upload/) |
+| PostgreSQL and hierarchy | | [001_create_assets.sql](backend/migrations/001_create_assets.sql), [store.go](backend/internal/store/store.go) |
+| Backend and API | Endpoints in section 6 | [main.go](backend/main.go), [api/](backend/internal/api/) |
+| Search | Search bar at `/explorer` | `SearchAssets` in [store.go](backend/internal/store/store.go), [asset-search.tsx](frontend/components/assets/asset-explorer/components/asset-search.tsx) |
+| Logging | `docker compose logs backend` | [logging.go](backend/internal/api/logging.go), [api.go](backend/internal/api/api.go) |
+| Unit tests | `docker compose run --rm test` | `*_test.go` files in [backend/](backend/) |
+| Infrastructure | `docker compose up --build` | [compose.yaml](compose.yaml), [scripts/](scripts/) |
+| Documentation | | This README |
+
+## 3. Tech Stack
 
 | Component | Technology |
 |---|---|
@@ -38,7 +57,7 @@ Built with **Next.js, TypeScript, Go and PostgreSQL**.
 | Database | PostgreSQL |
 | Testing | Go standard `testing` package |
 
-## 3. Getting Started
+## 4. Getting Started
 
 **Run with Docker** (requires only Docker)
 
@@ -57,7 +76,7 @@ If port 5432 is already in use: `DB_PORT=5433 docker compose up --build`
 ./scripts/dev.sh     # frontend on :3000, backend on :8080
 ```
 
-## 4. Running Tests
+## 5. Running Tests
 
 ```bash
 docker compose run --rm test   # with Docker
@@ -66,7 +85,7 @@ docker compose run --rm test   # with Docker
 
 Unit tests cover validation rules, cycle detection, hierarchy checks, CSV generation and import processing.
 
-## 5. API Endpoints
+## 6. API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -116,7 +135,7 @@ curl "http://localhost:8080/api/assets/search?q=pnl-001"
 
 It returns the first 20 matches, ordered by ID. `more` is `true` when more assets match than were returned.
 
-## 6. Design Decisions and Trade-offs
+## 7. Design Decisions and Trade-offs
 
 **Import**
 - **Validate first, commit second.** The user sees every error before anything is saved. The cost is two uploads of the same data.
@@ -140,7 +159,7 @@ It returns the first 20 matches, ordered by ID. `more` is `true` when more asset
 - **The tree loads one level at a time.** Opening an asset fetches its children. The first load is fast however large the hierarchy is, at the cost of a short wait on first opening an asset.
 - **The address is the selection.** The selected asset is in the URL, so a link, a refresh and the back button all work.
 
-## 7. Asset Explorer and Search
+## 8. Asset Explorer and Search
 
 **Explorer** (`/explorer`)
 - The tree on the left starts with the substations. Opening an asset shows the assets beneath it.
@@ -157,7 +176,7 @@ It returns the first 20 matches, ordered by ID. `more` is `true` when more asset
 
 Every view shows a message while loading, when there is nothing to show and when the backend cannot answer.
 
-## 8. Logging
+## 9. Logging
 
 The backend writes its logs to standard output, one line per event. See them with `docker compose logs backend`, or in the terminal that runs `./scripts/dev.sh`.
 
@@ -174,24 +193,9 @@ The backend writes its logs to standard output, one line per event. See them wit
 
 Every line for a request carries the same `request_id`. The contents of uploaded files are never logged, only the file name and counts.
 
-## 9. Known Limitations
+## 10. Known Limitations
 
 - Existing assets cannot be updated through CSV imports.
 - Validation currently loads existing assets into memory.
 - No import-history audit table.
 - No authentication, as it is outside the assignment scope.
-
-## 10. Where to Find Each Requirement
-
-| Criterion | In the app | In the code |
-|---|---|---|
-| CSV validation | Upload a file at `/` | [validate.go](backend/internal/asset/validate.go), [stored.go](backend/internal/asset/stored.go) |
-| Agentic workflow | | [AI_JOURNAL.md](AI_JOURNAL.md) |
-| Frontend | Hierarchy tree at `/explorer`, lists at `/assets` | [asset-explorer/](frontend/components/assets/asset-explorer/), [csv-upload/](frontend/components/uploads/csv-upload/) |
-| PostgreSQL and hierarchy | | [001_create_assets.sql](backend/migrations/001_create_assets.sql), [store.go](backend/internal/store/store.go) |
-| Backend and API | Endpoints in section 5 | [main.go](backend/main.go), [api/](backend/internal/api/) |
-| Search | Search bar at `/explorer` | `SearchAssets` in [store.go](backend/internal/store/store.go), [asset-search.tsx](frontend/components/assets/asset-explorer/components/asset-search.tsx) |
-| Logging | `docker compose logs backend` | [logging.go](backend/internal/api/logging.go), [api.go](backend/internal/api/api.go) |
-| Unit tests | `docker compose run --rm test` | `*_test.go` files in [backend/](backend/) |
-| Infrastructure | `docker compose up --build` | [compose.yaml](compose.yaml), [scripts/](scripts/) |
-| Documentation | | This README |

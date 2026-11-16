@@ -20,7 +20,7 @@
 12. Add logging for errors, requests and imports ✅
 13. Review testing comprehensively
 14. Review and refactor code for clarity
-15. Write architecture, trade-off and limitations
+15. Write architecture, trade-off and limitations ✅
 16. Complete all documentation
 17. Test fresh setup
 18. Host app
