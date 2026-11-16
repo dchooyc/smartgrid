@@ -43,6 +43,11 @@ func (h *Handler) Import(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if errs := asset.ValidateWithStored(assets, existing); len(errs) > 0 {
+		h.logFor(r).Warn("import",
+			"outcome", "rejected",
+			"file", upload.filename,
+			"rows", len(assets),
+			"errors", len(errs))
 		writeJSON(w, http.StatusUnprocessableEntity, importResponse{
 			Errors: errs,
 			Error:  fmt.Sprintf("validation failed with %d errors, so nothing was committed", len(errs)),
@@ -58,6 +63,11 @@ func (h *Handler) Import(w http.ResponseWriter, r *http.Request) {
 		h.fail(w, r, http.StatusInternalServerError, "the rows could not be saved, so nothing was committed", err)
 		return
 	}
+
+	h.logFor(r).Info("import",
+		"outcome", "committed",
+		"file", upload.filename,
+		"rows", len(assets))
 
 	writeJSON(w, http.StatusOK, importResponse{
 		Committed:     true,

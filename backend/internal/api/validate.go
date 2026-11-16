@@ -42,11 +42,18 @@ func (h *Handler) Validate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	warnings := asset.FindWarnings(assets)
+	h.logFor(r).Info("validation",
+		"file", upload.filename,
+		"rows", len(assets),
+		"errors", len(errs),
+		"warnings", len(warnings))
+
 	writeJSON(w, http.StatusOK, validateResponse{
 		Valid:       len(errs) == 0,
 		TotalRows:   len(assets),
 		Errors:      errs,
-		Warnings:    asset.FindWarnings(assets),
+		Warnings:    warnings,
 		ValidFile:   &validFile,
 		InvalidFile: &invalidFile,
 	})

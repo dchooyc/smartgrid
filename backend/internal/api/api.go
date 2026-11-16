@@ -24,11 +24,17 @@ func NewHandler(store *store.Store, logger *slog.Logger) *Handler {
 // why. The message says what could not be done and err is the cause. Use it
 // for failures on the server's side, not for mistakes in the request.
 func (h *Handler) fail(w http.ResponseWriter, r *http.Request, status int, message string, err error) {
-	h.logger.ErrorContext(r.Context(), message,
+	h.logFor(r).Error(message,
 		"method", r.Method,
 		"path", r.URL.Path,
 		"error", err)
 	writeError(w, status, message+": "+err.Error())
+}
+
+// logFor returns the logger for a request. Every line it writes carries the
+// request's ID.
+func (h *Handler) logFor(r *http.Request) *slog.Logger {
+	return h.logger.With("request_id", requestID(r.Context()))
 }
 
 // writeError reports that a request failed before producing any result.

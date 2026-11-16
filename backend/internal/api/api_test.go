@@ -36,6 +36,30 @@ func TestDatabaseFailureIsLoggedWithItsCause(t *testing.T) {
 	}
 }
 
+func TestFailureAndRequestLinesShareTheRequestID(t *testing.T) {
+	db, err := store.Open(unreachableDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var output bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&output, nil))
+	handler := LogRequests(logger, http.HandlerFunc(NewHandler(db, logger).ListAssets))
+
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest("GET", "/api/assets", nil))
+
+	id := response.Header().Get("X-Request-ID")
+	lines := strings.Split(strings.TrimSpace(output.String()), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("logged %d lines, want the failure and the request: %q", len(lines), output.String())
+	}
+	for _, line := range lines {
+		if id == "" || !strings.Contains(line, "request_id="+id) {
+			t.Errorf("logged %q, want it to contain request ID %q", line, id)
+		}
+	}
+}
+
 func TestMistakeInRequestIsNotLoggedAsFailure(t *testing.T) {
 	db, err := store.Open(unreachableDatabase)
 	if err != nil {

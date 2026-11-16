@@ -29,9 +29,17 @@ func TestLogRequests(t *testing.T) {
 			}))
 
 			request := httptest.NewRequest("GET", "/api/assets?limit=5", nil)
-			handler.ServeHTTP(httptest.NewRecorder(), request)
+			response := httptest.NewRecorder()
+			handler.ServeHTTP(response, request)
 
 			line := output.String()
+			id := response.Header().Get("X-Request-ID")
+			if len(id) != 8 {
+				t.Errorf("X-Request-ID = %q, want 8 characters", id)
+			}
+			if !strings.Contains(line, "request_id="+id) {
+				t.Errorf("logged %q, want it to contain the response's request ID %q", line, id)
+			}
 			if strings.Count(line, "\n") != 1 {
 				t.Fatalf("logged %q, want exactly one line", line)
 			}
