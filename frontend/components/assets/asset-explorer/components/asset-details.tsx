@@ -1,4 +1,6 @@
+import { useSearchParams } from "next/navigation";
 import { fetchAssetDetails } from "../lib/api";
+import { SEARCH_PARAM } from "../lib/fields";
 import { useLoaded } from "../lib/use-loaded";
 import AssetCard from "./asset-card";
 import { Descendants } from "./asset-children";
@@ -12,6 +14,8 @@ const RELATED = "ml-[42px]";
 
 export default function AssetDetails({ assetId }: { assetId: string }) {
   const details = useLoaded(() => fetchAssetDetails(assetId));
+  // The search this asset was found with, if it was opened from one.
+  const searchTerm = useSearchParams().get(SEARCH_PARAM)?.trim();
 
   if (details.state === "loading") {
     return (
@@ -30,7 +34,7 @@ export default function AssetDetails({ assetId }: { assetId: string }) {
       <section className="fade-in flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Details</h2>
         <AssetCard asset={asset}>
-          <AssetFields asset={asset} />
+          <AssetFields asset={asset} highlight={searchTerm} />
         </AssetCard>
       </section>
 

@@ -76,10 +76,10 @@ export default function AssetSearch() {
     return () => document.removeEventListener("keydown", handleKey);
   }, []);
 
-  function openAsset(asset: Asset) {
+  function openAsset(asset: Asset, searchTerm: string) {
     setOpen(false);
     input.current?.blur();
-    router.push(explorerPath(asset.asset_id));
+    router.push(explorerPath(asset.asset_id, searchTerm));
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -96,7 +96,7 @@ export default function AssetSearch() {
       event.preventDefault();
       setActive((active - 1 + assets.length) % assets.length);
     } else if (event.key === "Enter" && assets[active]) {
-      openAsset(assets[active]);
+      openAsset(assets[active], shown!.term);
     } else if (event.key === "ArrowDown") {
       setOpen(true);
     }
@@ -156,7 +156,7 @@ export default function AssetSearch() {
                   asset={asset}
                   active={index === active}
                   onHover={() => setActive(index)}
-                  onChoose={() => openAsset(asset)}
+                  onChoose={() => openAsset(asset, shown.term)}
                 />
               ))}
             </ul>
