@@ -3,10 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { FaMagnifyingGlass } from "react-icons/fa6";
+import { StatusIcon } from "@/components/assets/asset-card";
 import { searchAssets, type Asset } from "../lib/api";
 import { explorerPath } from "../lib/fields";
 import { TYPE_ICONS } from "../lib/type-icons";
-import StatusIcon from "./status-icon";
 
 // How long typing must pause before the backend is asked.
 const TYPING_PAUSE = 200;

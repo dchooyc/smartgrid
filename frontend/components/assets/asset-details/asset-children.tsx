@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa6";
+import { AssetSummary } from "@/components/assets/asset-card";
 import { fetchAssetDetails, type Asset } from "../lib/api";
 import { TYPE_ICONS } from "../lib/type-icons";
 import { TYPE_NAMES } from "../lib/types";
 import { useLoaded } from "../lib/use-loaded";
-import AssetSummary from "./asset-summary";
 
 // The children of an asset as cards, grouped by type in the order of the
 // hierarchy. A child that has children of its own can be opened to show them

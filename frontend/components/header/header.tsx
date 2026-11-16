@@ -3,12 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
-import {
-  ALL_ASSETS,
-  EXPLORER_PATH,
-  RefreshData,
-  TYPE_LISTINGS,
-} from "@/components/assets";
+import { ALL_ASSETS, EXPLORER_PATH, TYPE_LISTINGS } from "@/components/assets";
+import RefreshData from "./refresh-data";
 
 const UPLOAD = { path: "/", title: "Upload CSV" };
 

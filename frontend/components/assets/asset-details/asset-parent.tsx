@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa6";
+import { AssetSummary } from "@/components/assets/asset-card";
 import { fetchAssetDetails, type Asset } from "../lib/api";
 import { useLoaded } from "../lib/use-loaded";
-import AssetSummary from "./asset-summary";
 
 // The parent of an asset as a card. A parent that has a parent of its own
 // can be opened to show it beneath, indented, and so on up the hierarchy.

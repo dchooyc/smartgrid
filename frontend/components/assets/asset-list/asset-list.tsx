@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
+import { AssetSummary } from "@/components/assets/asset-card";
 import { PAGE_SIZE } from "../lib/api";
 import { ALL_ASSETS, type AssetListing } from "../lib/types";
 import { useAssetPages } from "../lib/use-asset-pages";
-import AssetSummary from "./asset-summary";
 import StatusCounts from "./status-counts";
 import TypeCounts from "./type-counts";
 

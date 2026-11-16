@@ -1,10 +1,9 @@
 import { useSearchParams } from "next/navigation";
+import { AssetCard, AssetFields } from "@/components/assets/asset-card";
 import { fetchAssetDetails } from "../lib/api";
 import { SEARCH_PARAM } from "../lib/fields";
 import { useLoaded } from "../lib/use-loaded";
-import AssetCard from "./asset-card";
 import { Descendants } from "./asset-children";
-import AssetFields from "./asset-fields";
 import AssetParent from "./asset-parent";
 import DescendantCounts from "./descendant-counts";
 

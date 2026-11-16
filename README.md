@@ -39,10 +39,10 @@ Built with **Next.js, TypeScript, Go and PostgreSQL**.
 |---|---|---|
 | CSV validation | Upload a file at `/` | [validate.go](backend/internal/asset/validate.go), [stored.go](backend/internal/asset/stored.go) |
 | Agentic workflow | | [AI_JOURNAL.md](AI_JOURNAL.md) |
-| Frontend | Hierarchy tree at `/explorer`, lists at `/assets` | [asset-explorer/](frontend/components/assets/asset-explorer/), [csv-upload/](frontend/components/uploads/csv-upload/) |
+| Frontend | Hierarchy tree at `/explorer`, lists at `/assets` | [assets/](frontend/components/assets/), [csv-upload/](frontend/components/uploads/csv-upload/) |
 | PostgreSQL and hierarchy | | [001_create_assets.sql](backend/migrations/001_create_assets.sql), [store.go](backend/internal/store/store.go) |
 | Backend and API | Endpoints in section 6 | [main.go](backend/main.go), [api/](backend/internal/api/) |
-| Search | Search bar at `/explorer` | `SearchAssets` in [store.go](backend/internal/store/store.go), [asset-search.tsx](frontend/components/assets/asset-explorer/components/asset-search.tsx) |
+| Search | Search bar at `/explorer` | `SearchAssets` in [store.go](backend/internal/store/store.go), [asset-search.tsx](frontend/components/assets/asset-search/asset-search.tsx) |
 | Logging | `docker compose logs backend` | [logging.go](backend/internal/api/logging.go), [api.go](backend/internal/api/api.go) |
 | Unit tests | `docker compose run --rm test` | `*_test.go` files in [backend/](backend/) |
 | Infrastructure | `docker compose up --build` | [compose.yaml](compose.yaml), [scripts/](scripts/) |

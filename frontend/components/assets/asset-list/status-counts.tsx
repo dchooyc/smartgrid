@@ -1,5 +1,5 @@
+import { StatusIcon, STATUSES } from "@/components/assets/asset-card";
 import { statusLabel } from "../lib/fields";
-import StatusIcon, { STATUSES } from "./status-icon";
 
 // How many of the assets are in each status, as an icon and a number.
 export default function StatusCounts({

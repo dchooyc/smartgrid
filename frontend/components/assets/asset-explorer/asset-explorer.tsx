@@ -1,7 +1,8 @@
 "use client";
 
-import { AssetDetails, AssetList } from "./components";
-import { ALL_ASSETS, findTypeListing } from "./lib/types";
+import { AssetDetails } from "@/components/assets/asset-details";
+import { AssetList } from "@/components/assets/asset-list";
+import { ALL_ASSETS, findTypeListing } from "../lib/types";
 
 type AssetExplorerProps = {
   assetId?: string; // the selected asset; without one, assets are listed

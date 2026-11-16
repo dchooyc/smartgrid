@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa6";
+import { StatusIcon } from "@/components/assets/asset-card";
 import { fetchAssetDetails, fetchSubstations, type Asset } from "../lib/api";
 import { explorerPath } from "../lib/fields";
 import { TYPE_ICONS } from "../lib/type-icons";
 import { useLoaded } from "../lib/use-loaded";
-import StatusIcon from "./status-icon";
 
 const NO_ANCESTORS: string[] = [];
 
