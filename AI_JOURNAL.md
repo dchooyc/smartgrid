@@ -159,6 +159,6 @@ I did not allow the agent (Claude Code) to run on its own with permission to com
 | Day 3 | Asset type pages, asset card design, lazy loading, CSV generator | 6 hours |
 | Day 4 | Rest | - |
 | Day 5 | Docker, setup script, asset hierarchy, layout | 5 hours |
-| Day 6 | Search, highlighting, logging, tidy api | TBD |
+| Day 6 | Search, highlighting, logging, tidy api | 6 hours |
 | Day 7 | TBD | TBD |
 | **Total** | | **TBD** |

@@ -76,6 +76,24 @@ If port 5432 is already in use: `DB_PORT=5433 docker compose up --build`
 ./scripts/dev.sh     # frontend on :3000, backend on :8080
 ```
 
+**Sample CSV files** (requires Go)
+
+```bash
+./scripts/auto-generate-csvs.sh
+```
+
+This writes five files to upload into the `generated-csv` folder, each with 3 substations and 48 assets:
+
+| File | What is wrong with it | What the app should do |
+|---|---|---|
+| 1. Valid | Nothing | Accept every row |
+| 2. Field errors | Missing names, unsupported statuses, bad dates, negative ratings | Reject those rows |
+| 3. Hierarchy errors | Parents not found, wrong types of parent, an asset that is its own parent, circular parents | Reject those rows |
+| 4. Duplicates | Repeated asset IDs and repeated serial numbers | Reject the repeated IDs; warn about the serial numbers |
+| 5. Missing column | One column removed | Reject the whole file |
+
+Next to each file is an answer sheet (`..._answers.txt`) that lists the changed lines and what the app should report for each. Every run uses new asset IDs, so the files never clash with assets already stored.
+
 ## 5. Running Tests
 
 ```bash
@@ -199,3 +217,9 @@ Every line for a request carries the same `request_id`. The contents of uploaded
 - Validation currently loads existing assets into memory.
 - No import-history audit table.
 - No authentication, as it is outside the assignment scope.
+
+## 11. Architecture
+
+## 12. Assumptions
+
+## 13. Next Steps
