@@ -40,8 +40,8 @@ func main() {
 	mux.HandleFunc("POST /api/validate", handler.Validate)
 	mux.HandleFunc("POST /api/imports", handler.Import)
 
-	mux.HandleFunc("GET /api/search", handler.Search)
 	mux.HandleFunc("GET /api/assets", handler.ListAssets)
+	mux.HandleFunc("GET /api/assets/search", handler.Search)
 	mux.HandleFunc("GET /api/assets/{assetId}", handler.GetAsset)
 
 	logger.Info("starting", "database", withoutPassword(databaseURL))

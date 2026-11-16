@@ -74,7 +74,7 @@ export type SearchResult = {
 
 // Finds the assets whose ID or name contains the term.
 export async function searchAssets(term: string): Promise<SearchResult> {
-  return get(`/api/search?${new URLSearchParams({ q: term })}`);
+  return get(`/api/assets/search?${new URLSearchParams({ q: term })}`);
 }
 
 // Fetches every substation: the top level of the hierarchy.

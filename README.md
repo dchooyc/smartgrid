@@ -59,8 +59,8 @@ Unit tests cover validation rules, cycle detection, hierarchy checks, CSV genera
 | POST | `/api/validate` | Validate CSV and generate results |
 | POST | `/api/imports` | Commit validated records |
 | GET | `/api/assets` | List assets, optionally of one type and a page at a time |
+| GET | `/api/assets/search?q=...` | Find assets whose ID or name contains the text |
 | GET | `/api/assets/{assetId}` | Asset details, parent, immediate children, ancestors and descendant counts |
-| GET | `/api/search?q=...` | Find assets whose ID or name contains the text |
 
 **Listing assets**
 
@@ -87,6 +87,20 @@ curl "http://localhost:8080/api/assets?type=TRANSFORMER&limit=20&after=TX-001-2"
 ```
 
 Assets are ordered by ID. `next_after` is `null` on the last page, and an unsupported `type` returns a 400 that lists the supported ones.
+
+**Searching assets**
+
+`GET /api/assets/search?q=...` returns the assets whose ID or name contains the text in `q`. Upper and lower case are treated the same.
+
+```bash
+# By name: finds "Aurora Panel A1"
+curl "http://localhost:8080/api/assets/search?q=panel"
+
+# By ID: finds "PNL-001-1-01"
+curl "http://localhost:8080/api/assets/search?q=pnl-001"
+```
+
+It returns the first 20 matches, ordered by ID. `more` is `true` when more assets match than were returned.
 
 ## 6. Design Decisions and Trade-offs
 
