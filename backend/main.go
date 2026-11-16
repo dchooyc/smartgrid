@@ -43,11 +43,6 @@ func main() {
 	mux.HandleFunc("GET /api/search", handler.Search)
 	mux.HandleFunc("GET /api/assets", handler.ListAssets)
 	mux.HandleFunc("GET /api/assets/{assetId}", handler.GetAsset)
-	mux.HandleFunc("GET /api/substations", handler.ListAssetsOfType("SUBSTATION"))
-	mux.HandleFunc("GET /api/transformers", handler.ListAssetsOfType("TRANSFORMER"))
-	mux.HandleFunc("GET /api/lv-boards", handler.ListAssetsOfType("LV_BOARD"))
-	mux.HandleFunc("GET /api/switchboards", handler.ListAssetsOfType("SWITCHBOARD"))
-	mux.HandleFunc("GET /api/switchboard-panels", handler.ListAssetsOfType("SWITCHBOARD_PANEL"))
 
 	logger.Info("starting", "database", withoutPassword(databaseURL))
 	logger.Info("listening", "addr", addr)

@@ -7,32 +7,28 @@ export const TYPE_NAMES: Record<string, string> = {
   SWITCHBOARD_PANEL: "Switchboard Panels",
 };
 
-// A list of assets: the page that shows it and the backend route it is
-// fetched from.
-export type AssetListing = { path: string; apiPath: string; title: string };
+// A list of assets: the page that shows it and the type of asset it lists.
+// Without a type it lists every asset.
+export type AssetListing = { path: string; assetType?: string; title: string };
 
-export const ALL_ASSETS: AssetListing = {
-  path: "/assets",
-  apiPath: "/api/assets",
-  title: "Assets",
+export const ALL_ASSETS: AssetListing = { path: "/assets", title: "Assets" };
+
+// The asset types, by the name used for them in page URLs.
+const TYPES_BY_URL_NAME: Record<string, string> = {
+  substations: "SUBSTATION",
+  transformers: "TRANSFORMER",
+  "lv-boards": "LV_BOARD",
+  switchboards: "SWITCHBOARD",
+  "switchboard-panels": "SWITCHBOARD_PANEL",
 };
 
-// The asset types, by the name used for them in URLs.
-const TYPE_TITLES: Record<string, string> = {
-  substations: "Substations",
-  transformers: "Transformers",
-  "lv-boards": "LV Boards",
-  switchboards: "Switchboards",
-  "switchboard-panels": "Switchboard Panels",
-};
-
-export const TYPE_LISTINGS: AssetListing[] = Object.keys(TYPE_TITLES).map(
-  (assetType) => ({
-    path: `/asset-type/${assetType}`,
-    apiPath: `/api/${assetType}`,
-    title: TYPE_TITLES[assetType],
-  }),
-);
+export const TYPE_LISTINGS: AssetListing[] = Object.entries(
+  TYPES_BY_URL_NAME,
+).map(([urlName, assetType]) => ({
+  path: `/asset-type/${urlName}`,
+  assetType,
+  title: TYPE_NAMES[assetType],
+}));
 
 // Finds the listing for an asset type from the URL, e.g. "lv-boards".
 export function findTypeListing(assetType: string): AssetListing | undefined {

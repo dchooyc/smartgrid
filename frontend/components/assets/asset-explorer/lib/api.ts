@@ -45,16 +45,17 @@ export type AssetPage = {
 // before the reader gets there, and small enough to arrive at once.
 export const PAGE_SIZE = 20;
 
-// Fetches one page of a list of assets, e.g. from "/api/assets" or
-// "/api/substations", starting after the previous page's nextAfter.
+// Fetches one page of the assets, or of the assets of one type such as
+// "SUBSTATION", starting after the previous page's nextAfter.
 export async function fetchAssetPage(
-  apiPath: string,
+  assetType?: string,
   after?: string,
 ): Promise<AssetPage> {
   const query = new URLSearchParams({ limit: String(PAGE_SIZE) });
+  if (assetType) query.set("type", assetType);
   if (after) query.set("after", after);
 
-  const result = await get(`${apiPath}?${query}`);
+  const result = await get(`/api/assets?${query}`);
   return {
     assets: result.assets,
     counts: {
@@ -78,7 +79,7 @@ export async function searchAssets(term: string): Promise<SearchResult> {
 
 // Fetches every substation: the top level of the hierarchy.
 export async function fetchSubstations(): Promise<Asset[]> {
-  return (await get("/api/substations")).assets;
+  return (await get("/api/assets?type=SUBSTATION")).assets;
 }
 
 export async function fetchAssetDetails(

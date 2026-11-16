@@ -12,7 +12,7 @@ const LOAD_AHEAD = "1500px";
 
 export default function AssetList({ listing }: { listing: AssetListing }) {
   const { assets, counts, nextAfter, loading, error, loadMore } = useAssetPages(
-    listing.apiPath,
+    listing.assetType,
   );
   const end = useRef<HTMLDivElement>(null);
 

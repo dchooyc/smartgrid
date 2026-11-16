@@ -11,7 +11,7 @@ type AssetPages = {
 
 // Fetches a list of assets a page at a time. The first page is fetched when
 // the component appears and each call to loadMore adds the next one.
-export function useAssetPages(apiPath: string) {
+export function useAssetPages(assetType?: string) {
   const [pages, setPages] = useState<AssetPages>({
     assets: [],
     counts: null,
@@ -35,7 +35,7 @@ export function useAssetPages(apiPath: string) {
       setPages((previous) => ({ ...previous, loading: true, error: null }));
     }
 
-    fetchAssetPage(apiPath, after).then(
+    fetchAssetPage(assetType, after).then(
       (page) => {
         fetching.current = false;
         next.current = page.nextAfter;

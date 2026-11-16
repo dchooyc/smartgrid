@@ -53,19 +53,40 @@ docker compose run --rm test   # with Docker
 Unit tests cover validation rules, cycle detection, hierarchy checks, CSV generation and import processing.
 
 ## 5. API Endpoints
-// To be improved..
+
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | `/api/validate` | Validate CSV and generate results |
 | POST | `/api/imports` | Commit validated records |
-| GET | `/api/assets` | List all assets |
-| GET | `/api/assets?type=...` | Filter assets by type |
-| GET | `/api/assets/{assetId}` | Asset details, parent and immediate children |
-| GET | `/api/substations` | List substations |
-| GET | `/api/transformers` | List transformers |
-| GET | `/api/lv-boards` | List LV boards |
-| GET | `/api/switchboards` | List switchboards |
-| GET | `/api/switchboard-panels` | List switchboard panels |
+| GET | `/api/assets` | List assets, optionally of one type and a page at a time |
+| GET | `/api/assets/{assetId}` | Asset details, parent, immediate children, ancestors and descendant counts |
+| GET | `/api/search?q=...` | Find assets whose ID or name contains the text |
+
+**Listing assets**
+
+`GET /api/assets` takes three optional query parameters, which can be combined:
+
+| Parameter | Meaning | Example |
+|---|---|---|
+| `type` | Only assets of this type: `SUBSTATION`, `TRANSFORMER`, `LV_BOARD`, `SWITCHBOARD` or `SWITCHBOARD_PANEL` | `type=TRANSFORMER` |
+| `limit` | At most this many assets, from 1 to 100 | `limit=20` |
+| `after` | Continue after this asset ID, taken from the previous response's `next_after` | `after=TX-001-2` |
+
+```bash
+# Every asset
+curl "http://localhost:8080/api/assets"
+
+# Only the substations
+curl "http://localhost:8080/api/assets?type=SUBSTATION"
+
+# The first 20 transformers
+curl "http://localhost:8080/api/assets?type=TRANSFORMER&limit=20"
+
+# The next 20, where the previous response ended with "next_after": "TX-001-2"
+curl "http://localhost:8080/api/assets?type=TRANSFORMER&limit=20&after=TX-001-2"
+```
+
+Assets are ordered by ID. `next_after` is `null` on the last page, and an unsupported `type` returns a 400 that lists the supported ones.
 
 ## 6. Design Decisions and Trade-offs
 

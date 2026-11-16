@@ -82,20 +82,8 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 // returned and "after" continues from the asset ID given in the previous
 // response's next_after. Without a limit, every asset is returned.
 func (h *Handler) ListAssets(w http.ResponseWriter, r *http.Request) {
-	h.listAssets(w, r, r.URL.Query().Get("type"))
-}
-
-// ListAssetsOfType returns a handler listing the stored assets of one type,
-// for routes such as /api/substations.
-func (h *Handler) ListAssetsOfType(assetType string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		h.listAssets(w, r, assetType)
-	}
-}
-
-// listAssets serves both styles of type filtering. An empty type lists all
-// assets.
-func (h *Handler) listAssets(w http.ResponseWriter, r *http.Request, assetType string) {
+	query := r.URL.Query()
+	assetType := query.Get("type")
 	supported := asset.SupportedTypes()
 	if assetType != "" && !slices.Contains(supported, assetType) {
 		writeError(w, http.StatusBadRequest, fmt.Sprintf(
@@ -103,7 +91,6 @@ func (h *Handler) listAssets(w http.ResponseWriter, r *http.Request, assetType s
 		return
 	}
 
-	query := r.URL.Query()
 	limit := 0
 	if value := query.Get("limit"); value != "" {
 		var err error
