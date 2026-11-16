@@ -6,14 +6,28 @@ Built with **Next.js, TypeScript, Go and PostgreSQL**.
 
 ## 1. Features
 
-- CSV upload and validation with row-level error reporting.
-- Validation of asset fields, duplicate IDs and parent-child relationships.
-- Cycle detection and hierarchy validation.
-- Downloadable CSV files containing valid and invalid records.
-- Duplicate serial number warnings.
-- PostgreSQL persistence with atomic transactions.
-- Read-only REST APIs for retrieving assets by ID or type.
-- Basic asset explorer displaying asset details, direct parents and children.
+**Import**
+- Upload a CSV file and see every error and warning by line.
+- Checks fields, duplicate IDs, parent-child rules and cycles.
+- Download the valid and invalid rows as separate files.
+- Save the valid rows to PostgreSQL in one transaction: all rows or none.
+
+**Explore**
+- Expandable hierarchy tree, from substations down to switchboard panels.
+- Asset details with parent, children grouped by type and counts of everything beneath.
+- Asset lists, all together or by type.
+
+**Search**
+- Find assets by part of their ID or name.
+- Choosing a result opens the asset, expands the tree to it and highlights it.
+- Every asset has its own address, which survives a refresh.
+
+**Logging**
+- The backend logs every request it receives: what was asked for, the result and how long it took.
+- When something fails on the server, the log says why.
+- Every validation and import is logged with its file name and row counts.
+- An error shown in the app ends with a reference, which finds that failure in the logs.
+
 
 ## 2. Tech Stack
 
