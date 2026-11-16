@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -57,6 +58,15 @@ func TestFailureAndRequestLinesShareTheRequestID(t *testing.T) {
 		if id == "" || !strings.Contains(line, "request_id="+id) {
 			t.Errorf("logged %q, want it to contain request ID %q", line, id)
 		}
+	}
+
+	// The response tells the user the same ID, to quote when reporting it.
+	var body struct {
+		RequestID string `json:"request_id"`
+	}
+	json.Unmarshal(response.Body.Bytes(), &body)
+	if body.RequestID != id {
+		t.Errorf("response request_id = %q, want %q", body.RequestID, id)
 	}
 }
 

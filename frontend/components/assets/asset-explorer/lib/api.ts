@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/api-error";
 import { dataVersion } from "@/lib/data-version";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -101,9 +102,7 @@ async function get(path: string) {
 
   const result = await response.json().catch(() => null);
   if (!response.ok || !result) {
-    throw new Error(
-      result?.error ?? `The backend returned an error (${response.status}).`,
-    );
+    throw new Error(apiErrorMessage(result, response.status));
   }
   return result;
 }

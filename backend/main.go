@@ -5,6 +5,7 @@ package main
 import (
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 
 	"smartgrid/backend/internal/api"
@@ -48,8 +49,20 @@ func main() {
 	mux.HandleFunc("GET /api/switchboards", handler.ListAssetsOfType("SWITCHBOARD"))
 	mux.HandleFunc("GET /api/switchboard-panels", handler.ListAssetsOfType("SWITCHBOARD_PANEL"))
 
+	logger.Info("starting", "database", withoutPassword(databaseURL))
 	logger.Info("listening", "addr", addr)
 	err = http.ListenAndServe(addr, api.LogRequests(logger, mux))
 	logger.Error("the server stopped", "error", err)
 	os.Exit(1)
+}
+
+// withoutPassword returns a database URL with its password hidden, so that
+// the logs can say which database the server uses without leaking it.
+func withoutPassword(databaseURL string) string {
+	parsed, err := url.Parse(databaseURL)
+	if err != nil {
+		// The error would quote the URL, password included.
+		return "a URL that could not be read"
+	}
+	return parsed.Redacted()
 }

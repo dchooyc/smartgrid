@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"log/slog"
 	"net/http"
+	"runtime/debug"
 	"time"
 )
 
@@ -38,6 +39,9 @@ func requestID(ctx context.Context) string {
 // It also gives each request an ID, which is on every line logged for that
 // request and in the response's X-Request-ID header. Searching the logs for
 // the ID shows everything that happened in the request.
+//
+// A handler that panics does not take the server down or leave the caller
+// without an answer: the panic is logged and the response is a 500.
 func LogRequests(logger *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -46,7 +50,7 @@ func LogRequests(logger *slog.Logger, next http.Handler) http.Handler {
 		r = r.WithContext(context.WithValue(r.Context(), requestIDKey{}, id))
 		recorder := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 
-		next.ServeHTTP(recorder, r)
+		serve(logger, next, recorder, r)
 
 		level := slog.LevelInfo
 		switch {
@@ -63,6 +67,26 @@ func LogRequests(logger *slog.Logger, next http.Handler) http.Handler {
 			"status", recorder.status,
 			"duration_ms", time.Since(start).Milliseconds())
 	})
+}
+
+// serve runs the handler. If the handler panics, which means the code has a
+// bug, serve logs the panic with where it happened and responds with a 500.
+func serve(logger *slog.Logger, next http.Handler, w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		cause := recover()
+		if cause == nil {
+			return
+		}
+		id := requestID(r.Context())
+		logger.Error("panic",
+			"request_id", id,
+			"method", r.Method,
+			"path", r.URL.Path,
+			"error", cause,
+			"stack", string(debug.Stack()))
+		writeFailure(w, http.StatusInternalServerError, "the server failed unexpectedly", id)
+	}()
+	next.ServeHTTP(w, r)
 }
 
 // statusRecorder remembers the status code a handler responds with, which

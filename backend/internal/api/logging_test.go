@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -63,5 +64,43 @@ func TestLogRequestsWithoutExplicitStatus(t *testing.T) {
 
 	if line := output.String(); !strings.Contains(line, "status=200") {
 		t.Errorf("logged %q, want status=200", line)
+	}
+}
+
+func TestPanicIsLoggedAndAnsweredWithServerError(t *testing.T) {
+	var output bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&output, nil))
+	handler := LogRequests(logger, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		panic("something impossible happened")
+	}))
+
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest("GET", "/api/assets", nil))
+
+	if response.Code != http.StatusInternalServerError {
+		t.Errorf("status = %d, want %d", response.Code, http.StatusInternalServerError)
+	}
+	id := response.Header().Get("X-Request-ID")
+	var body struct {
+		RequestID string `json:"request_id"`
+	}
+	json.Unmarshal(response.Body.Bytes(), &body)
+	if body.RequestID != id {
+		t.Errorf("response request_id = %q, want %q", body.RequestID, id)
+	}
+
+	lines := strings.Split(strings.TrimSpace(output.String()), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("logged %d lines, want the panic and the request: %q", len(lines), output.String())
+	}
+	for _, want := range []string{"level=ERROR", "msg=panic", "request_id=" + id, "something impossible happened", "stack="} {
+		if !strings.Contains(lines[0], want) {
+			t.Errorf("logged %q, want it to contain %q", lines[0], want)
+		}
+	}
+	for _, want := range []string{"level=ERROR", "msg=request", "request_id=" + id, "status=500"} {
+		if !strings.Contains(lines[1], want) {
+			t.Errorf("logged %q, want it to contain %q", lines[1], want)
+		}
 	}
 }

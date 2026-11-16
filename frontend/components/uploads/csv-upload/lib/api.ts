@@ -1,3 +1,4 @@
+import { apiErrorMessage } from "@/lib/api-error";
 import { bumpDataVersion } from "@/lib/data-version";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -44,9 +45,7 @@ export async function validateOnBackend(file: File): Promise<ValidationResult> {
 
   const result = await response.json().catch(() => null);
   if (!response.ok || !result) {
-    throw new Error(
-      result?.error ?? `The backend returned an error (${response.status}).`,
-    );
+    throw new Error(apiErrorMessage(result, response.status));
   }
   return {
     totalRows: result.total_rows,
@@ -75,10 +74,7 @@ export async function commitValidRows(file: GeneratedFile): Promise<CommitResult
 
   const result = await response.json().catch(() => null);
   if (!response.ok || !result?.committed) {
-    return failed(
-      result?.error ?? `The backend returned an error (${response.status}).`,
-      result?.errors,
-    );
+    return failed(apiErrorMessage(result, response.status), result?.errors);
   }
   bumpDataVersion(); // the asset pages must not show what the browser kept
   return { committed: true, rowsCommitted: result.rows_committed };

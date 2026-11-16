@@ -23,18 +23,31 @@ func NewHandler(store *store.Store, logger *slog.Logger) *Handler {
 // fail reports that the server could not do what a request asked, and logs
 // why. The message says what could not be done and err is the cause. Use it
 // for failures on the server's side, not for mistakes in the request.
+//
+// The response carries the request's ID, so that whoever sees the failure
+// can quote it and whoever investigates can find it in the logs.
 func (h *Handler) fail(w http.ResponseWriter, r *http.Request, status int, message string, err error) {
 	h.logFor(r).Error(message,
 		"method", r.Method,
 		"path", r.URL.Path,
 		"error", err)
-	writeError(w, status, message+": "+err.Error())
+	writeFailure(w, status, message+": "+err.Error(), requestID(r.Context()))
 }
 
 // logFor returns the logger for a request. Every line it writes carries the
 // request's ID.
 func (h *Handler) logFor(r *http.Request) *slog.Logger {
 	return h.logger.With("request_id", requestID(r.Context()))
+}
+
+// writeFailure reports a failure on the server's side, with the ID of the
+// request it happened in.
+func writeFailure(w http.ResponseWriter, status int, message, requestID string) {
+	writeJSON(w, status, map[string]any{
+		"error":      message,
+		"errors":     []asset.ValidationError{},
+		"request_id": requestID,
+	})
 }
 
 // writeError reports that a request failed before producing any result.
