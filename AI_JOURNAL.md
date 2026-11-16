@@ -17,7 +17,7 @@
 9. Update README with setup and testing ✅
 10. Frontend component to display assets hierarchy ✅
 11. Frontend search functionality with tree expansion and highlighting ✅
-12. Add logging for errors, requests and imports
+12. Add logging for errors, requests and imports ✅
 13. Review testing comprehensively
 14. Review and refactor code for clarity
 15. Write architecture, trade-off and limitations
@@ -159,6 +159,6 @@ I did not allow the agent (Claude Code) to run on its own with permission to com
 | Day 3 | Asset type pages, asset card design, lazy loading, CSV generator | 6 hours |
 | Day 4 | Rest | - |
 | Day 5 | Docker, setup script, asset hierarchy, layout | 5 hours |
-| Day 6 | Search, highlighting | TBD |
+| Day 6 | Search, highlighting, logging | TBD |
 | Day 7 | TBD | TBD |
 | **Total** | | **TBD** |
