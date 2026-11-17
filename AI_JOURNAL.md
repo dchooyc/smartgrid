@@ -23,7 +23,7 @@
 15. Write architecture, trade-off and limitations ✅
 16. Complete all documentation ✅
 17. Test fresh setup
-18. Host app
+18. Host app ✅
 
 ## Three representative prompts
 ```

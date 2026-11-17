@@ -4,6 +4,14 @@ A full stack web app for importing electrical grid assets data from csv files an
 
 Built with **Next.js, TypeScript, Go and PostgreSQL**.
 
+**Live demo:** https://smartgrid.istodaychristmas.com
+
+| Username | Password |
+|---|---|
+| `reviewer` | sent by email |
+
+The supplied data is already imported. The password only keeps strangers out of the demo; it is not part of the app.
+
 ![The Explorer: the hierarchy tree, search and the selected asset's details](images/explorer.png)
 
 ![The upload page, where a CSV file is chosen and validated](images/upload.png)
@@ -45,6 +53,7 @@ Built with **Next.js, TypeScript, Go and PostgreSQL**.
 | Logging | `docker compose logs backend` | [logging.go](backend/internal/api/logging.go), [api.go](backend/internal/api/api.go) |
 | Unit tests | `docker compose run --rm test` | `*_test.go` files in [backend/](backend/) |
 | Infrastructure | `docker compose up --build` | [compose.yaml](compose.yaml), [scripts/](scripts/) |
+| Cloud hosting (bonus) | https://smartgrid.istodaychristmas.com | [compose.prod.yaml](compose.prod.yaml), [Caddyfile](Caddyfile), [.env.example](.env.example) |
 | Documentation | | This README |
 
 ## 3. Getting Started
@@ -322,7 +331,7 @@ Where the brief left a choice open, these are the assumptions the app is built o
 - There are no frontend tests.
 
 **Other**
-- No authentication, which is outside the assignment's scope.
+- No authentication, which is outside the assignment's scope. The hosted demo is protected only by one shared password at the web server in front of it.
 - The sample file script needs Go installed.
 
 ## 13. Next Steps
