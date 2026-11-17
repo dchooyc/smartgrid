@@ -76,6 +76,36 @@ If port 5432 is already in use: `DB_PORT=5433 docker compose up --build`
 ./scripts/dev.sh     # frontend on :3000, backend on :8080
 ```
 
+**Import the supplied data**
+
+The supplied file is in the repository as [grid_assets.csv](grid_assets.csv).
+
+1. Open http://localhost:3000 and choose `grid_assets.csv`.
+2. Click **Validate**. Nothing is saved yet. The page should report:
+   - 205 lines can be committed.
+   - 17 lines have errors, each listed with its line number and reason.
+   - 2 warnings, for a serial number used twice.
+3. Click **Commit Valid Rows**. The page should report that 205 rows were committed.
+4. Open **Explorer**. The tree should show 13 substations.
+
+The 17 rejected rows are the ones in the file that break a rule:
+
+| Lines | Problem |
+|---|---|
+| 91, 92 | The parent does not exist |
+| 93 to 97 | Circular parents |
+| 98, 99 | Wrong type of parent |
+| 178 | Unsupported asset type |
+| 179 | Invalid date |
+| 180 | Negative rating |
+| 181 | Unsupported status |
+| 182 | Missing asset ID |
+| 183 | Missing asset name |
+| 184 | A substation with a parent |
+| 185 | No parent |
+
+Uploading the same file again commits nothing: every row that was saved is reported as already in the database.
+
 **Sample CSV files** (requires Go)
 
 ```bash
@@ -213,10 +243,26 @@ Every line for a request carries the same `request_id`. The contents of uploaded
 
 ## 10. Known Limitations
 
-- Existing assets cannot be updated through CSV imports.
-- Validation currently loads existing assets into memory.
-- No import-history audit table.
-- No authentication, as it is outside the assignment scope.
+**Import**
+- Assets that are already stored cannot be updated or deleted by an import.
+- Validation loads every stored asset into memory, which would not suit a very large database.
+- Dates must be day/month/year, as in the supplied file. Other formats are rejected.
+- There is no record of past imports, only the log lines.
+
+**Search and API**
+- Search reads every row and returns at most 20 matches, ordered by ID, not by how well they match.
+- Search covers the asset ID and name, not the type.
+- Listing assets without `limit` returns all of them.
+- The API accepts requests from any website.
+- A server error shows its technical cause to the user.
+
+**Testing**
+- The tests do not run against a real database, so the import transaction and the SQL queries are checked by hand only.
+- There are no frontend tests.
+
+**Other**
+- No authentication, which is outside the assignment's scope.
+- The sample file script needs Go installed.
 
 ## 11. Architecture
 
