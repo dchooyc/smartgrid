@@ -49,7 +49,7 @@ The supplied data is already imported. The password only keeps strangers out of 
 | Agentic workflow | | [AI_JOURNAL.md](AI_JOURNAL.md), [AGENTS.md](AGENTS.md) |
 | Frontend | Hierarchy tree at `/explorer`, lists at `/assets` | [assets/](frontend/components/assets/), [csv-upload/](frontend/components/uploads/csv-upload/) |
 | PostgreSQL and hierarchy | | [001_create_assets.sql](backend/migrations/001_create_assets.sql), [store.go](backend/internal/store/store.go) |
-| Backend and API | Endpoints in section 8 | [main.go](backend/main.go), [api/](backend/internal/api/) |
+| Backend and API | Endpoints in section 9 | [main.go](backend/main.go), [api/](backend/internal/api/) |
 | Search | Search bar at `/explorer` | `SearchAssets` in [store.go](backend/internal/store/store.go), [asset-search.tsx](frontend/components/assets/asset-search/asset-search.tsx) |
 | Logging | `docker compose logs backend` | [logging.go](backend/internal/api/logging.go), [api.go](backend/internal/api/api.go) |
 | Unit tests | `docker compose run --rm test` | `*_test.go` files in [backend/](backend/) |
@@ -133,7 +133,23 @@ docker compose run --rm test   # with Docker
 
 Unit tests cover validation rules, cycle detection, hierarchy checks, checks against stored assets, CSV generation and logging.
 
-## 5. Tech Stack
+## 5. Scripts
+
+All in [scripts/](scripts/). Each one says what it does in a comment at its top.
+
+| Script | What it does | Needs |
+|---|---|---|
+| [setup.sh](scripts/setup.sh) | Prepares a machine for local development: starts the database, applies the migrations and installs the dependencies. Run once. | Docker, Go, Node.js |
+| [dev.sh](scripts/dev.sh) | Starts the database, the backend on :8080 and the frontend on :3000. | Docker, Go, Node.js |
+| [test.sh](scripts/test.sh) | Runs the backend tests and prints a summary. | Go |
+| [migrate.sh](scripts/migrate.sh) | Applies the SQL migrations that have not run yet. Docker Compose runs it automatically. | `psql` |
+| [auto-generate-csvs.sh](scripts/auto-generate-csvs.sh) | Writes five sample CSV files, one valid and four with different problems. | Go |
+| [generate-csv.sh](scripts/generate-csv.sh) | Asks which problems to include, then writes one sample CSV file. | Go |
+| [deploy.sh](scripts/deploy.sh) | On the server only: pulls the latest commit, runs the tests, builds, and swaps in the new version. Leaves the site as it was if the tests or the build fail. | Docker |
+
+None of them is needed to run the app with Docker: `docker compose up --build` is enough.
+
+## 6. Tech Stack
 
 | Component | Technology |
 |---|---|
@@ -142,7 +158,7 @@ Unit tests cover validation rules, cycle detection, hierarchy checks, checks aga
 | Database | PostgreSQL |
 | Testing | Go standard `testing` package |
 
-## 6. Architecture
+## 7. Architecture
 
 ```mermaid
 flowchart TD
@@ -178,7 +194,7 @@ Each box in the diagram links to its code. The same links: [frontend](frontend/)
 
 Only the backend talks to the database, and `asset` contains no HTTP or SQL, so the validation rules are tested on their own.
 
-## 7. Asset Explorer and Search
+## 8. Asset Explorer and Search
 
 **Explorer** (`/explorer`)
 - The tree on the left starts with the substations. Opening an asset shows the assets beneath it.
@@ -195,7 +211,7 @@ Only the backend talks to the database, and `asset` contains no HTTP or SQL, so 
 
 Every view shows a message while loading, when there is nothing to show and when the backend cannot answer.
 
-## 8. API Endpoints
+## 9. API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -246,7 +262,7 @@ curl "http://localhost:8080/api/assets/search?q=pnl-001"
 
 It returns the first 20 matches, ordered by ID. `more` is `true` when more assets match than were returned.
 
-## 9. Logging
+## 10. Logging
 
 The backend writes its logs to standard output, one line per event. See them with `docker compose logs backend`, or in the terminal that runs `./scripts/dev.sh`.
 
@@ -264,7 +280,7 @@ The backend writes its logs to standard output, one line per event. See them wit
 
 Every line for a request carries the same `request_id`. The contents of uploaded files are never logged, only the file name and counts.
 
-## 10. Assumptions
+## 11. Assumptions
 
 Where the brief left a choice open, these are the assumptions the app is built on.
 
@@ -291,7 +307,7 @@ Where the brief left a choice open, these are the assumptions the app is built o
 **Users**
 - One trusted user at a time. There is no authentication, and two imports running at the same moment were not designed for.
 
-## 11. Design Decisions and Trade-offs
+## 12. Design Decisions and Trade-offs
 
 **Import**
 - **Validate first, commit second.** The user sees every error before anything is saved. The cost is two uploads of the same data.
@@ -315,7 +331,7 @@ Where the brief left a choice open, these are the assumptions the app is built o
 - **The tree loads one level at a time.** Opening an asset fetches its children. The first load is fast however large the hierarchy is, at the cost of a short wait on first opening an asset.
 - **The address is the selection.** The selected asset is in the URL, so a link, a refresh and the back button all work.
 
-## 12. Known Limitations
+## 13. Known Limitations
 
 **Import**
 - Assets that are already stored cannot be updated or deleted by an import.
@@ -337,4 +353,4 @@ Where the brief left a choice open, these are the assumptions the app is built o
 - No authentication, which is outside the assignment's scope. The hosted demo is protected only by one shared password at the web server in front of it.
 - The sample file script needs Go installed.
 
-## 13. Next Steps
+## 14. Next Steps
