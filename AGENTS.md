@@ -36,7 +36,6 @@ docker compose up --build         # the whole app in containers
 ./scripts/migrate.sh              # apply new migrations
 ./scripts/auto-generate-csvs.sh   # five sample CSV files in generated-csv/
 ./scripts/generate-csv.sh         # one sample CSV file, with chosen problems
-./scripts/delete-assets.sh        # empty the development database
 ```
 
 ## Test commands
@@ -58,7 +57,7 @@ cd frontend && npm run lint                # lint
 - Do not run `next build` while the dev server is running.
 - Start a server only when its port is free, and stop only the processes you started.
 - Never log the contents of an uploaded file. Log the file name and counts only.
-- Do not run `scripts/delete-assets.sh` unless asked.
+- Do not delete the stored assets (`DELETE /api/assets`, the "Delete all assets" button) unless asked.
 
 ## Definition of done
 

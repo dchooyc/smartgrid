@@ -45,6 +45,7 @@ func main() {
 	mux.HandleFunc("POST /api/imports", handler.Import)
 
 	mux.HandleFunc("GET /api/assets", handler.ListAssets)
+	mux.HandleFunc("DELETE /api/assets", handler.DeleteAllAssets)
 	mux.HandleFunc("GET /api/assets/search", handler.Search)
 	mux.HandleFunc("GET /api/assets/{assetId}", handler.GetAsset)
 

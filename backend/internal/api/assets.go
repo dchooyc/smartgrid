@@ -166,3 +166,15 @@ func (h *Handler) GetAsset(w http.ResponseWriter, r *http.Request) {
 		DescendantCounts: descendantCounts,
 	})
 }
+
+// DeleteAllAssets deletes every stored asset, for starting again with an
+// empty database. It is logged as a warning because it cannot be undone.
+func (h *Handler) DeleteAllAssets(w http.ResponseWriter, r *http.Request) {
+	deleted, err := h.store.DeleteAllAssets(r.Context())
+	if err != nil {
+		h.fail(w, r, http.StatusInternalServerError, "the assets could not be deleted", err)
+		return
+	}
+	h.logFor(r).Warn("delete all assets", "rows", deleted)
+	writeJSON(w, http.StatusOK, map[string]int64{"deleted": deleted})
+}

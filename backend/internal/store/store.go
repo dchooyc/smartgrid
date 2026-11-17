@@ -169,6 +169,17 @@ func (s *Store) ListChildren(ctx context.Context, parentID string) ([]asset.Stor
 	return s.queryAssets(ctx, "WHERE parent_asset_id = $1", 0, parentID)
 }
 
+// DeleteAllAssets deletes every stored asset and returns how many there
+// were. It is one statement, so parents and children go together and the
+// table is never left with a child whose parent is gone.
+func (s *Store) DeleteAllAssets(ctx context.Context) (int64, error) {
+	result, err := s.db.ExecContext(ctx, "DELETE FROM assets")
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 // SearchAssets returns the assets whose ID or name contains the term, in any
 // mix of upper and lower case, ordered by ID. A limit above zero caps how
 // many are returned.

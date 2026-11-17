@@ -68,9 +68,18 @@ func writeJSON(w http.ResponseWriter, status int, body any) {
 // the frontend's, may read its responses. Browsers refuse to let a page read
 // a response from a different address unless the response names that page's
 // address, so pages on any other website are refused.
+//
+// Before a request that changes data in a way a plain form cannot, such as
+// DELETE, a browser first asks with OPTIONS whether it is allowed. That
+// question is answered here and never reaches the handlers.
 func AllowOrigin(origin string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
+		if r.Method == http.MethodOptions {
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }

@@ -101,3 +101,23 @@ func TestAllowOriginNamesOnlyTheFrontend(t *testing.T) {
 		t.Errorf("Access-Control-Allow-Origin = %q, want the frontend's address", got)
 	}
 }
+
+func TestAllowOriginAnswersTheBrowsersQuestion(t *testing.T) {
+	reached := false
+	handler := AllowOrigin("http://localhost:3000", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reached = true
+	}))
+
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest("OPTIONS", "/api/assets", nil))
+
+	if response.Code != http.StatusNoContent {
+		t.Errorf("status = %d, want %d", response.Code, http.StatusNoContent)
+	}
+	if got := response.Header().Get("Access-Control-Allow-Methods"); !strings.Contains(got, "DELETE") {
+		t.Errorf("Access-Control-Allow-Methods = %q, want it to allow DELETE", got)
+	}
+	if reached {
+		t.Error("the question reached the handlers, want it answered before them")
+	}
+}

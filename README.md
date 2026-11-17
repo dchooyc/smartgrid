@@ -23,6 +23,7 @@ The supplied data is already imported. The password only keeps strangers out of 
 - Checks fields, duplicate IDs, parent-child rules and cycles.
 - Download the valid and invalid rows as separate files.
 - Save the valid rows to PostgreSQL in one transaction: all rows or none.
+- Delete all stored assets from the upload page, after a warning, to start again.
 
 **Explore**
 - Expandable hierarchy tree, from substations down to switchboard panels.
@@ -201,6 +202,7 @@ Every view shows a message while loading, when there is nothing to show and when
 | POST | `/api/validate` | Validate CSV and generate results |
 | POST | `/api/imports` | Commit validated records |
 | GET | `/api/assets` | List assets, optionally of one type and a page at a time |
+| DELETE | `/api/assets` | Delete every stored asset, to start again |
 | GET | `/api/assets/search?q=...` | Find assets whose ID or name contains the text |
 | GET | `/api/assets/{assetId}` | Asset details, parent, immediate children, ancestors and descendant counts |
 
@@ -257,6 +259,7 @@ The backend writes its logs to standard output, one line per event. See them wit
 | A server failure | ERROR | What could not be done and the cause |
 | A validation | INFO | File name, rows, errors and warnings |
 | An import | INFO if committed, WARN if rejected | File name, rows and errors |
+| A delete of all assets | WARN | How many assets were deleted |
 | A crash in a handler | ERROR | The cause and where it happened. The server keeps running and answers with a 500. |
 
 Every line for a request carries the same `request_id`. The contents of uploaded files are never logged, only the file name and counts.
