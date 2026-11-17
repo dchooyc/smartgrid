@@ -37,7 +37,7 @@ Built with **Next.js, TypeScript, Go and PostgreSQL**.
 | Criterion | In the app | In the code |
 |---|---|---|
 | CSV validation | Upload a file at `/` | [validate.go](backend/internal/asset/validate.go), [stored.go](backend/internal/asset/stored.go) |
-| Agentic workflow | | [AI_JOURNAL.md](AI_JOURNAL.md) |
+| Agentic workflow | | [AI_JOURNAL.md](AI_JOURNAL.md), [AGENTS.md](AGENTS.md) |
 | Frontend | Hierarchy tree at `/explorer`, lists at `/assets` | [assets/](frontend/components/assets/), [csv-upload/](frontend/components/uploads/csv-upload/) |
 | PostgreSQL and hierarchy | | [001_create_assets.sql](backend/migrations/001_create_assets.sql), [store.go](backend/internal/store/store.go) |
 | Backend and API | Endpoints in section 8 | [main.go](backend/main.go), [api/](backend/internal/api/) |
