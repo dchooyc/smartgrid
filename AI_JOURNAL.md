@@ -22,7 +22,7 @@
 14. Review and refactor code for clarity ✅
 15. Write architecture, trade-off and limitations ✅
 16. Complete all documentation ✅
-17. Test fresh setup
+17. Test fresh setup ✅
 18. Host app ✅
 
 ## Three representative prompts
@@ -159,6 +159,6 @@ I did not allow the agent (Claude Code) to run on its own with permission to com
 | Day 3 | Asset type pages, asset card design, lazy loading, CSV generator | 6 hours |
 | Day 4 | Rest | - |
 | Day 5 | Docker, setup script, asset hierarchy, layout | 5 hours |
-| Day 6 | Search, highlighting, logging, tidy api | 6 hours |
-| Day 7 | Review code, review documentation, hosting | TBD |
-| **Total** | | **TBD** |
+| Day 6 | Search, highlighting, logging, API clean-up | 6 hours |
+| Day 7 | Review code, review documentation, hosting, test setup | 4 hours |
+| **Total** | | **30 hours** |

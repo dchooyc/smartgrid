@@ -10,7 +10,7 @@ Built with **Next.js, TypeScript, Go and PostgreSQL**.
 |---|---|
 | `reviewer` | sent by email |
 
-The supplied data is already imported. The password only keeps strangers out of the demo; it is not part of the app.
+Upload [grid_assets.csv](grid_assets.csv) on the upload page at any time, and remove everything again with **Delete all assets**.
 
 ![The Explorer: the hierarchy tree, search and the selected asset's details](images/explorer.png)
 
@@ -354,3 +354,5 @@ Where the brief left a choice open, these are the assumptions the app is built o
 - The sample file script needs Go installed.
 
 ## 14. Next Steps
+
+**Sign-in and an audit trail.** Replace the shared demo password with real accounts through single sign-on. Anyone can view; only named people can import or delete. Record who imported which file and when.
