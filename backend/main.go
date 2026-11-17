@@ -18,6 +18,10 @@ const (
 	// defaultDatabaseURL is used when DATABASE_URL is not set. It is the
 	// development database that Docker Compose runs (see compose.yaml).
 	defaultDatabaseURL = "postgres://smartgrid:smartgrid@localhost:5432/smartgrid?sslmode=disable"
+
+	// defaultAllowedOrigin is used when ALLOWED_ORIGIN is not set. It is
+	// where the frontend runs in development and under Docker Compose.
+	defaultAllowedOrigin = "http://localhost:3000"
 )
 
 func main() {
@@ -44,9 +48,15 @@ func main() {
 	mux.HandleFunc("GET /api/assets/search", handler.Search)
 	mux.HandleFunc("GET /api/assets/{assetId}", handler.GetAsset)
 
-	logger.Info("starting", "database", withoutPassword(databaseURL))
+	// Only pages served from this address may read the API's responses.
+	allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
+	if allowedOrigin == "" {
+		allowedOrigin = defaultAllowedOrigin
+	}
+
+	logger.Info("starting", "database", withoutPassword(databaseURL), "allowed_origin", allowedOrigin)
 	logger.Info("listening", "addr", addr)
-	err = http.ListenAndServe(addr, api.LogRequests(logger, mux))
+	err = http.ListenAndServe(addr, api.LogRequests(logger, api.AllowOrigin(allowedOrigin, mux)))
 	logger.Error("the server stopped", "error", err)
 	os.Exit(1)
 }

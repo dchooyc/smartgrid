@@ -59,9 +59,18 @@ func writeError(w http.ResponseWriter, status int, message string) {
 }
 
 func writeJSON(w http.ResponseWriter, status int, body any) {
-	// Let the frontend, which runs on a different port, read the response.
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(body)
+}
+
+// AllowOrigin wraps a handler so that pages served from one other address,
+// the frontend's, may read its responses. Browsers refuse to let a page read
+// a response from a different address unless the response names that page's
+// address, so pages on any other website are refused.
+func AllowOrigin(origin string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		next.ServeHTTP(w, r)
+	})
 }

@@ -88,3 +88,16 @@ func TestMistakeInRequestIsNotLoggedAsFailure(t *testing.T) {
 		t.Errorf("logged %q, want nothing", output.String())
 	}
 }
+
+func TestAllowOriginNamesOnlyTheFrontend(t *testing.T) {
+	handler := AllowOrigin("http://localhost:3000", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		writeError(w, http.StatusNotFound, "not found")
+	}))
+
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest("GET", "/api/assets/missing", nil))
+
+	if got := response.Header().Get("Access-Control-Allow-Origin"); got != "http://localhost:3000" {
+		t.Errorf("Access-Control-Allow-Origin = %q, want the frontend's address", got)
+	}
+}

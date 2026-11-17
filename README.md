@@ -315,7 +315,6 @@ Where the brief left a choice open, these are the assumptions the app is built o
 - Search reads every row and returns at most 20 matches, ordered by ID, not by how well they match.
 - Search covers the asset ID and name, not the type.
 - Listing assets without `limit` returns all of them.
-- The API accepts requests from any website.
 - A server error shows its technical cause to the user.
 
 **Testing**

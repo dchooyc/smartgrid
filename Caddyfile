@@ -1,0 +1,20 @@
+# The web server in front of the hosted app (see compose.prod.yaml). It gets
+# an HTTPS certificate for the site, asks for the demo password and passes
+# each request on to the frontend or the backend.
+#
+# The values in {$...} come from the .env file on the server.
+{$SITE_ADDRESS} {
+	# One shared username and password keep strangers and bots out of the
+	# demo. This is not the app's access control: the app has none.
+	basic_auth {
+		{$DEMO_USER} {$DEMO_PASSWORD_HASH}
+	}
+
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+
+	handle {
+		reverse_proxy frontend:3000
+	}
+}
