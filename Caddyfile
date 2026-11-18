@@ -3,6 +3,13 @@
 # each request on to the frontend or the backend.
 #
 # The values in {$...} come from the .env file on the server.
+
+{
+	servers {
+		protocols h1 h2
+	}
+}
+
 {$SITE_ADDRESS} {
 	# One shared username and password keep strangers and bots out of the
 	# demo. This is not the app's access control: the app has none.
