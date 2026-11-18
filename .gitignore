@@ -3,3 +3,6 @@
 
 # Local settings read by Docker Compose, e.g. DB_PORT
 /.env
+
+# The submission archive made with git archive
+/*.zip
